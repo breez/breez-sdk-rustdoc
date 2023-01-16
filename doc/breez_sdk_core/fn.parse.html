@@ -1,0 +1,95 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Parses generic user input, typically pasted from clipboard or scanned from a QR"><meta name="keywords" content="rust, rustlang, rust-lang, parse"><title>parse in breez_sdk_core - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../normalize.css"><link rel="stylesheet" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../ayu.css" disabled><link rel="stylesheet" href="../dark.css" disabled><link rel="stylesheet" href="../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../storage.js"></script><script defer src="sidebar-items.js"></script><script defer src="../main.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../favicon.svg"></head><body class="rustdoc fn"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../breez_sdk_core/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div></a><h2></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../breez_sdk_core/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div></a><div class="sidebar-elems"><h2><a href="index.html">In breez_sdk_core</a></h2></div></nav><main><div class="width-limiter"><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../wheel.svg"></a></div></form></nav><section id="main-content" class="content"><div class="main-heading"><h1 class="fqn">Function <a href="index.html">breez_sdk_core</a>::<wbr><a class="fn" href="#">parse</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../clipboard.svg" width="19" height="18" alt="Copy item path"></button></h1><span class="out-of-band"><a class="srclink" href="../src/breez_sdk_core/input_parser.rs.html#138-203">source</a> · <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></div><div class="item-decl"><pre class="rust fn"><code>pub async fn parse(input: &amp;<a class="primitive" href="https://doc.rust-lang.org/1.66.0/std/primitive.str.html">str</a>) -&gt; <a class="type" href="https://docs.rs/anyhow/1.0.68/anyhow/type.Result.html" title="type anyhow::Result">Result</a>&lt;<a class="enum" href="enum.InputType.html" title="enum breez_sdk_core::InputType">InputType</a>&gt;</code></pre></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Parses generic user input, typically pasted from clipboard or scanned from a QR</p>
+<h2 id="examples"><a href="#examples">Examples</a></h2><h3 id="on-chain-btc-addresses-incl-bip-21-uris"><a href="#on-chain-btc-addresses-incl-bip-21-uris">On-chain BTC addresses (incl. BIP 21 URIs)</a></h3>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>breez_sdk_core::{InputType::<span class="kw-2">*</span>, parse};
+
+<span class="attribute">#[tokio::main]
+</span><span class="kw">async fn </span>main() {
+    <span class="macro">assert!</span>(<span class="macro">matches!</span>( parse(<span class="string">&quot;1andreas3batLhQa2FawWjeyjCqyBzypd&quot;</span>).<span class="kw">await</span>, <span class="prelude-val">Ok</span>(BitcoinAddress{address: <span class="kw">_</span>}) ));
+    <span class="macro">assert!</span>(<span class="macro">matches!</span>( parse(<span class="string">&quot;1andreas3batLhQa2FawWjeyjCqyBzypd?amount=0.00002000&quot;</span>).<span class="kw">await</span>, <span class="prelude-val">Ok</span>(BitcoinAddress{address: <span class="kw">_</span>}) ));
+    <span class="macro">assert!</span>(<span class="macro">matches!</span>( parse(<span class="string">&quot;1andreas3batLhQa2FawWjeyjCqyBzypd?amount=0.00002000&amp;label=Hello&quot;</span>).<span class="kw">await</span>, <span class="prelude-val">Ok</span>(BitcoinAddress{address: <span class="kw">_</span>}) ));
+    <span class="macro">assert!</span>(<span class="macro">matches!</span>( parse(<span class="string">&quot;1andreas3batLhQa2FawWjeyjCqyBzypd?amount=0.00002000&amp;label=Hello&amp;message=Msg&quot;</span>).<span class="kw">await</span>, <span class="prelude-val">Ok</span>(BitcoinAddress{address: <span class="kw">_</span>}) ));
+
+    <span class="macro">assert!</span>(<span class="macro">matches!</span>( parse(<span class="string">&quot;bitcoin:1andreas3batLhQa2FawWjeyjCqyBzypd&quot;</span>).<span class="kw">await</span>, <span class="prelude-val">Ok</span>(BitcoinAddress{address: <span class="kw">_</span>}) ));
+    <span class="macro">assert!</span>(<span class="macro">matches!</span>( parse(<span class="string">&quot;bitcoin:1andreas3batLhQa2FawWjeyjCqyBzypd?amount=0.00002000&quot;</span>).<span class="kw">await</span>, <span class="prelude-val">Ok</span>(BitcoinAddress{address: <span class="kw">_</span>}) ));
+    <span class="macro">assert!</span>(<span class="macro">matches!</span>( parse(<span class="string">&quot;bitcoin:1andreas3batLhQa2FawWjeyjCqyBzypd?amount=0.00002000&amp;label=Hello&quot;</span>).<span class="kw">await</span>, <span class="prelude-val">Ok</span>(BitcoinAddress{address: <span class="kw">_</span>}) ));
+    <span class="macro">assert!</span>(<span class="macro">matches!</span>( parse(<span class="string">&quot;bitcoin:1andreas3batLhQa2FawWjeyjCqyBzypd?amount=0.00002000&amp;label=Hello&amp;message=Msg&quot;</span>).<span class="kw">await</span>, <span class="prelude-val">Ok</span>(BitcoinAddress{address: <span class="kw">_</span>}) ));
+}</code></pre></div>
+<h3 id="bolt-11-invoices"><a href="#bolt-11-invoices">BOLT 11 invoices</a></h3>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>breez_sdk_core::{InputType::<span class="kw-2">*</span>, parse};
+
+<span class="attribute">#[tokio::main]
+</span><span class="kw">async fn </span>main() {
+    <span class="kw">let </span>invoice = <span class="string">&quot;lnbc110n1p38q3gtpp5ypz09jrd8p993snjwnm68cph4ftwp22le34xd4r8ftspwshxhmnsdqqxqyjw5qcqpxsp5htlg8ydpywvsa7h3u4hdn77ehs4z4e844em0apjyvmqfkzqhhd2q9qgsqqqyssqszpxzxt9uuqzymr7zxcdccj5g69s8q7zzjs7sgxn9ejhnvdh6gqjcy22mss2yexunagm5r2gqczh8k24cwrqml3njskm548aruhpwssq9nvrvz&quot;</span>;
+    <span class="macro">assert!</span>(<span class="macro">matches!</span>( parse(invoice).<span class="kw">await</span>, <span class="prelude-val">Ok</span>(Bolt11{invoice: <span class="kw">_</span>}) ));
+    <span class="macro">assert!</span>(<span class="macro">matches!</span>( parse( <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;lightning:{}&quot;</span>, invoice) ).<span class="kw">await</span>, <span class="prelude-val">Ok</span>(Bolt11{invoice: <span class="kw">_</span>}) ));
+
+    <span class="comment">// BIP 21 with LN fallback parses to a LN invoice
+    </span><span class="kw">let </span>btc_address = <span class="string">&quot;1andreas3batLhQa2FawWjeyjCqyBzypd&quot;</span>;
+    <span class="macro">assert!</span>(<span class="macro">matches!</span>( parse( <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;bitcoin:{}?lightning={}&quot;</span>, btc_address, invoice) ).<span class="kw">await</span>, <span class="prelude-val">Ok</span>(Bolt11{invoice: <span class="kw">_</span>}) ));
+}</code></pre></div>
+<h3 id="web-urls"><a href="#web-urls">Web URLs</a></h3>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>breez_sdk_core::{InputType::<span class="kw-2">*</span>, parse};
+
+<span class="attribute">#[tokio::main]
+</span><span class="kw">async fn </span>main() {
+    <span class="macro">assert!</span>(<span class="macro">matches!</span>( parse(<span class="string">&quot;https://breez.technology&quot;</span>).<span class="kw">await</span>, <span class="prelude-val">Ok</span>(Url{url: <span class="kw">_</span>}) ));
+    <span class="macro">assert!</span>(<span class="macro">matches!</span>( parse(<span class="string">&quot;https://breez.technology/test-path&quot;</span>).<span class="kw">await</span>, <span class="prelude-val">Ok</span>(Url{url: <span class="kw">_</span>}) ));
+    <span class="macro">assert!</span>(<span class="macro">matches!</span>( parse(<span class="string">&quot;https://breez.technology/test-path?arg=val&quot;</span>).<span class="kw">await</span>, <span class="prelude-val">Ok</span>(Url{url: <span class="kw">_</span>}) ));
+}</code></pre></div>
+<h3 id="lnurl"><a href="#lnurl">LNURL</a></h3>
+<p>Both the bech32 and the raw (non-bech32, but with specific prefixes) variants are supported.</p>
+<h4 id="lnurl-pay-request"><a href="#lnurl-pay-request">LNURL pay request</a></h4>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>breez_sdk_core::{InputType::<span class="kw-2">*</span>, LnUrlRequestData::<span class="kw-2">*</span>, parse};
+<span class="kw">use </span>anyhow::Result;
+
+<span class="attribute">#[tokio::main]
+</span><span class="kw">async fn </span>main() -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">let </span>lnurl_pay_url = <span class="string">&quot;lnurl1dp68gurn8ghj7mr0vdskc6r0wd6z7mrww4excttsv9un7um9wdekjmmw84jxywf5x43rvv35xgmr2enrxanr2cfcvsmnwe3jxcukvde48qukgdec89snwde3vfjxvepjxpjnjvtpxd3kvdnxx5crxwpjvyunsephsz36jf&quot;</span>;
+
+    <span class="macro">assert!</span>(<span class="macro">matches!</span>( parse(lnurl_pay_url).<span class="kw">await</span>, <span class="prelude-val">Ok</span>(LnUrlPay{data: <span class="kw">_</span>}) ));
+    <span class="comment">// assert!(matches!( parse(&quot;lnurlp://domain.com/lnurl-pay?key=val&quot;).await, Ok(LnUrlPay{data: _}) ));
+    // assert!(matches!( parse(&quot;lightning@address.com&quot;).await, Ok(LnUrlPay{data: _}) ));
+
+    </span><span class="kw">if let </span><span class="prelude-val">Ok</span>(LnUrlPay{data: pd}) = parse(lnurl_pay_url).<span class="kw">await </span>{
+        <span class="macro">assert_eq!</span>(pd.callback, <span class="string">&quot;https://localhost/lnurl-pay/callback/db945b624265fc7f5a8d77f269f7589d789a771bdfd20e91a3cf6f50382a98d7&quot;</span>);
+        <span class="macro">assert_eq!</span>(pd.max_sendable, <span class="number">16000</span>);
+        <span class="macro">assert_eq!</span>(pd.min_sendable, <span class="number">4000</span>);
+        <span class="macro">assert_eq!</span>(pd.comment_allowed, <span class="number">0</span>);
+        <span class="macro">assert_eq!</span>(pd.metadata_vec()<span class="question-mark">?</span>.len(), <span class="number">3</span>);
+    }
+
+    <span class="prelude-val">Ok</span>(())
+}</code></pre></div>
+<h4 id="lnurl-withdraw-request"><a href="#lnurl-withdraw-request">LNURL withdraw request</a></h4>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>breez_sdk_core::{InputType::<span class="kw-2">*</span>, LnUrlRequestData::<span class="kw-2">*</span>, parse};
+
+<span class="attribute">#[tokio::main]
+</span><span class="kw">async fn </span>main() {
+    <span class="kw">let </span>lnurl_withdraw_url = <span class="string">&quot;lnurl1dp68gurn8ghj7mr0vdskc6r0wd6z7mrww4exctthd96xserjv9mn7um9wdekjmmw843xxwpexdnxzen9vgunsvfexq6rvdecx93rgdmyxcuxverrvcursenpxvukzv3c8qunsdecx33nzwpnvg6ryc3hv93nzvecxgcxgwp3h33lxk&quot;</span>;
+
+    <span class="macro">assert!</span>(<span class="macro">matches!</span>( parse(lnurl_withdraw_url).<span class="kw">await</span>, <span class="prelude-val">Ok</span>(LnUrlWithdraw{data: <span class="kw">_</span>}) ));
+    <span class="comment">// assert!(matches!( parse(&quot;lnurlw://domain.com/lnurl-withdraw?key=val&quot;).await, Ok(LnUrlWithdraw{data: _} ));
+
+    </span><span class="kw">if let </span><span class="prelude-val">Ok</span>(LnUrlWithdraw{data: wd}) = parse(lnurl_withdraw_url).<span class="kw">await </span>{
+        <span class="macro">assert_eq!</span>(wd.callback, <span class="string">&quot;https://localhost/lnurl-withdraw/callback/e464f841c44dbdd86cee4f09f4ccd3ced58d2e24f148730ec192748317b74538&quot;</span>);
+        <span class="macro">assert_eq!</span>(wd.k1, <span class="string">&quot;37b4c919f871c090830cc47b92a544a30097f03430bc39670b8ec0da89f01a81&quot;</span>);
+        <span class="macro">assert_eq!</span>(wd.min_withdrawable, <span class="number">3000</span>);
+        <span class="macro">assert_eq!</span>(wd.max_withdrawable, <span class="number">12000</span>);
+        <span class="macro">assert_eq!</span>(wd.default_description, <span class="string">&quot;sample withdraw&quot;</span>);
+    }
+}</code></pre></div>
+<h4 id="lnurl-auth-request"><a href="#lnurl-auth-request">LNURL auth request</a></h4>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>breez_sdk_core::{InputType::<span class="kw-2">*</span>, LnUrlRequestData::<span class="kw-2">*</span>, parse};
+
+<span class="attribute">#[tokio::main]
+</span><span class="kw">async fn </span>main() {
+    <span class="kw">let </span>lnurl_auth_url = <span class="string">&quot;lnurl1dp68gurn8ghj7mr0vdskc6r0wd6z7mrww4excttvdankjm3lw3skw0tvdankjm3xdvcn6vtp8q6n2dfsx5mrjwtrxdjnqvtzv56rzcnyv3jrxv3sxqmkyenrvv6kve3exv6nqdtyv43nqcmzvdsnvdrzx33rsenxx5unqc3cxgeqgntfgu&quot;</span>;
+
+    <span class="macro">assert!</span>(<span class="macro">matches!</span>( parse(lnurl_auth_url).<span class="kw">await</span>, <span class="prelude-val">Ok</span>(LnUrlAuth{data: <span class="kw">_</span>}) ));
+    <span class="comment">// assert!(matches!( parse(&quot;keyauth://domain.com/auth?key=val&quot;).await, Ok(LnUrlAuth{data: _}) ));
+
+    </span><span class="kw">if let </span><span class="prelude-val">Ok</span>(LnUrlAuth{data: ad}) = parse(lnurl_auth_url).<span class="kw">await </span>{
+        <span class="macro">assert_eq!</span>(ad.k1, <span class="string">&quot;1a855505699c3e01be41bddd32007bfcc5ff93505dec0cbca64b4b8ff590b822&quot;</span>);
+    }
+}</code></pre></div>
+</div></details></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="breez_sdk_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0 (69f9c33d7 2022-12-12)" ></div></body></html>

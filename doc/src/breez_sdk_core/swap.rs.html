@@ -1,0 +1,2058 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `sdk-core/src/swap.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>swap.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../breez_sdk_core/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
+<span id="2">2</span>
+<span id="3">3</span>
+<span id="4">4</span>
+<span id="5">5</span>
+<span id="6">6</span>
+<span id="7">7</span>
+<span id="8">8</span>
+<span id="9">9</span>
+<span id="10">10</span>
+<span id="11">11</span>
+<span id="12">12</span>
+<span id="13">13</span>
+<span id="14">14</span>
+<span id="15">15</span>
+<span id="16">16</span>
+<span id="17">17</span>
+<span id="18">18</span>
+<span id="19">19</span>
+<span id="20">20</span>
+<span id="21">21</span>
+<span id="22">22</span>
+<span id="23">23</span>
+<span id="24">24</span>
+<span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
+<span id="44">44</span>
+<span id="45">45</span>
+<span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
+<span id="50">50</span>
+<span id="51">51</span>
+<span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
+<span id="57">57</span>
+<span id="58">58</span>
+<span id="59">59</span>
+<span id="60">60</span>
+<span id="61">61</span>
+<span id="62">62</span>
+<span id="63">63</span>
+<span id="64">64</span>
+<span id="65">65</span>
+<span id="66">66</span>
+<span id="67">67</span>
+<span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
+<span id="71">71</span>
+<span id="72">72</span>
+<span id="73">73</span>
+<span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
+<span id="77">77</span>
+<span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
+<span id="86">86</span>
+<span id="87">87</span>
+<span id="88">88</span>
+<span id="89">89</span>
+<span id="90">90</span>
+<span id="91">91</span>
+<span id="92">92</span>
+<span id="93">93</span>
+<span id="94">94</span>
+<span id="95">95</span>
+<span id="96">96</span>
+<span id="97">97</span>
+<span id="98">98</span>
+<span id="99">99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
+<span id="357">357</span>
+<span id="358">358</span>
+<span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
+<span id="362">362</span>
+<span id="363">363</span>
+<span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
+<span id="367">367</span>
+<span id="368">368</span>
+<span id="369">369</span>
+<span id="370">370</span>
+<span id="371">371</span>
+<span id="372">372</span>
+<span id="373">373</span>
+<span id="374">374</span>
+<span id="375">375</span>
+<span id="376">376</span>
+<span id="377">377</span>
+<span id="378">378</span>
+<span id="379">379</span>
+<span id="380">380</span>
+<span id="381">381</span>
+<span id="382">382</span>
+<span id="383">383</span>
+<span id="384">384</span>
+<span id="385">385</span>
+<span id="386">386</span>
+<span id="387">387</span>
+<span id="388">388</span>
+<span id="389">389</span>
+<span id="390">390</span>
+<span id="391">391</span>
+<span id="392">392</span>
+<span id="393">393</span>
+<span id="394">394</span>
+<span id="395">395</span>
+<span id="396">396</span>
+<span id="397">397</span>
+<span id="398">398</span>
+<span id="399">399</span>
+<span id="400">400</span>
+<span id="401">401</span>
+<span id="402">402</span>
+<span id="403">403</span>
+<span id="404">404</span>
+<span id="405">405</span>
+<span id="406">406</span>
+<span id="407">407</span>
+<span id="408">408</span>
+<span id="409">409</span>
+<span id="410">410</span>
+<span id="411">411</span>
+<span id="412">412</span>
+<span id="413">413</span>
+<span id="414">414</span>
+<span id="415">415</span>
+<span id="416">416</span>
+<span id="417">417</span>
+<span id="418">418</span>
+<span id="419">419</span>
+<span id="420">420</span>
+<span id="421">421</span>
+<span id="422">422</span>
+<span id="423">423</span>
+<span id="424">424</span>
+<span id="425">425</span>
+<span id="426">426</span>
+<span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
+<span id="548">548</span>
+<span id="549">549</span>
+<span id="550">550</span>
+<span id="551">551</span>
+<span id="552">552</span>
+<span id="553">553</span>
+<span id="554">554</span>
+<span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
+<span id="570">570</span>
+<span id="571">571</span>
+<span id="572">572</span>
+<span id="573">573</span>
+<span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
+<span id="580">580</span>
+<span id="581">581</span>
+<span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
+<span id="587">587</span>
+<span id="588">588</span>
+<span id="589">589</span>
+<span id="590">590</span>
+<span id="591">591</span>
+<span id="592">592</span>
+<span id="593">593</span>
+<span id="594">594</span>
+<span id="595">595</span>
+<span id="596">596</span>
+<span id="597">597</span>
+<span id="598">598</span>
+<span id="599">599</span>
+<span id="600">600</span>
+<span id="601">601</span>
+<span id="602">602</span>
+<span id="603">603</span>
+<span id="604">604</span>
+<span id="605">605</span>
+<span id="606">606</span>
+<span id="607">607</span>
+<span id="608">608</span>
+<span id="609">609</span>
+<span id="610">610</span>
+<span id="611">611</span>
+<span id="612">612</span>
+<span id="613">613</span>
+<span id="614">614</span>
+<span id="615">615</span>
+<span id="616">616</span>
+<span id="617">617</span>
+<span id="618">618</span>
+<span id="619">619</span>
+<span id="620">620</span>
+<span id="621">621</span>
+<span id="622">622</span>
+<span id="623">623</span>
+<span id="624">624</span>
+<span id="625">625</span>
+<span id="626">626</span>
+<span id="627">627</span>
+<span id="628">628</span>
+<span id="629">629</span>
+<span id="630">630</span>
+<span id="631">631</span>
+<span id="632">632</span>
+<span id="633">633</span>
+<span id="634">634</span>
+<span id="635">635</span>
+<span id="636">636</span>
+<span id="637">637</span>
+<span id="638">638</span>
+<span id="639">639</span>
+<span id="640">640</span>
+<span id="641">641</span>
+<span id="642">642</span>
+<span id="643">643</span>
+<span id="644">644</span>
+<span id="645">645</span>
+<span id="646">646</span>
+<span id="647">647</span>
+<span id="648">648</span>
+<span id="649">649</span>
+<span id="650">650</span>
+<span id="651">651</span>
+<span id="652">652</span>
+<span id="653">653</span>
+<span id="654">654</span>
+<span id="655">655</span>
+<span id="656">656</span>
+<span id="657">657</span>
+<span id="658">658</span>
+<span id="659">659</span>
+<span id="660">660</span>
+<span id="661">661</span>
+<span id="662">662</span>
+<span id="663">663</span>
+<span id="664">664</span>
+<span id="665">665</span>
+<span id="666">666</span>
+<span id="667">667</span>
+<span id="668">668</span>
+<span id="669">669</span>
+<span id="670">670</span>
+<span id="671">671</span>
+<span id="672">672</span>
+<span id="673">673</span>
+<span id="674">674</span>
+<span id="675">675</span>
+<span id="676">676</span>
+<span id="677">677</span>
+<span id="678">678</span>
+<span id="679">679</span>
+<span id="680">680</span>
+<span id="681">681</span>
+<span id="682">682</span>
+<span id="683">683</span>
+<span id="684">684</span>
+<span id="685">685</span>
+<span id="686">686</span>
+<span id="687">687</span>
+<span id="688">688</span>
+<span id="689">689</span>
+<span id="690">690</span>
+<span id="691">691</span>
+<span id="692">692</span>
+<span id="693">693</span>
+<span id="694">694</span>
+<span id="695">695</span>
+<span id="696">696</span>
+<span id="697">697</span>
+<span id="698">698</span>
+<span id="699">699</span>
+<span id="700">700</span>
+<span id="701">701</span>
+<span id="702">702</span>
+<span id="703">703</span>
+<span id="704">704</span>
+<span id="705">705</span>
+<span id="706">706</span>
+<span id="707">707</span>
+<span id="708">708</span>
+<span id="709">709</span>
+<span id="710">710</span>
+<span id="711">711</span>
+<span id="712">712</span>
+<span id="713">713</span>
+<span id="714">714</span>
+<span id="715">715</span>
+<span id="716">716</span>
+<span id="717">717</span>
+<span id="718">718</span>
+<span id="719">719</span>
+<span id="720">720</span>
+<span id="721">721</span>
+<span id="722">722</span>
+<span id="723">723</span>
+<span id="724">724</span>
+<span id="725">725</span>
+<span id="726">726</span>
+<span id="727">727</span>
+<span id="728">728</span>
+<span id="729">729</span>
+<span id="730">730</span>
+<span id="731">731</span>
+<span id="732">732</span>
+<span id="733">733</span>
+<span id="734">734</span>
+<span id="735">735</span>
+<span id="736">736</span>
+<span id="737">737</span>
+<span id="738">738</span>
+<span id="739">739</span>
+<span id="740">740</span>
+<span id="741">741</span>
+<span id="742">742</span>
+<span id="743">743</span>
+<span id="744">744</span>
+<span id="745">745</span>
+<span id="746">746</span>
+<span id="747">747</span>
+<span id="748">748</span>
+<span id="749">749</span>
+<span id="750">750</span>
+<span id="751">751</span>
+<span id="752">752</span>
+<span id="753">753</span>
+<span id="754">754</span>
+<span id="755">755</span>
+<span id="756">756</span>
+<span id="757">757</span>
+<span id="758">758</span>
+<span id="759">759</span>
+<span id="760">760</span>
+<span id="761">761</span>
+<span id="762">762</span>
+<span id="763">763</span>
+<span id="764">764</span>
+<span id="765">765</span>
+<span id="766">766</span>
+<span id="767">767</span>
+<span id="768">768</span>
+<span id="769">769</span>
+<span id="770">770</span>
+<span id="771">771</span>
+<span id="772">772</span>
+<span id="773">773</span>
+<span id="774">774</span>
+<span id="775">775</span>
+<span id="776">776</span>
+<span id="777">777</span>
+<span id="778">778</span>
+<span id="779">779</span>
+<span id="780">780</span>
+<span id="781">781</span>
+<span id="782">782</span>
+<span id="783">783</span>
+<span id="784">784</span>
+<span id="785">785</span>
+<span id="786">786</span>
+<span id="787">787</span>
+<span id="788">788</span>
+<span id="789">789</span>
+<span id="790">790</span>
+<span id="791">791</span>
+<span id="792">792</span>
+<span id="793">793</span>
+<span id="794">794</span>
+<span id="795">795</span>
+<span id="796">796</span>
+<span id="797">797</span>
+<span id="798">798</span>
+<span id="799">799</span>
+<span id="800">800</span>
+<span id="801">801</span>
+<span id="802">802</span>
+<span id="803">803</span>
+<span id="804">804</span>
+<span id="805">805</span>
+<span id="806">806</span>
+<span id="807">807</span>
+<span id="808">808</span>
+<span id="809">809</span>
+<span id="810">810</span>
+<span id="811">811</span>
+<span id="812">812</span>
+<span id="813">813</span>
+<span id="814">814</span>
+<span id="815">815</span>
+<span id="816">816</span>
+<span id="817">817</span>
+<span id="818">818</span>
+<span id="819">819</span>
+<span id="820">820</span>
+<span id="821">821</span>
+<span id="822">822</span>
+<span id="823">823</span>
+<span id="824">824</span>
+<span id="825">825</span>
+<span id="826">826</span>
+<span id="827">827</span>
+<span id="828">828</span>
+<span id="829">829</span>
+<span id="830">830</span>
+<span id="831">831</span>
+<span id="832">832</span>
+<span id="833">833</span>
+<span id="834">834</span>
+<span id="835">835</span>
+<span id="836">836</span>
+<span id="837">837</span>
+<span id="838">838</span>
+<span id="839">839</span>
+<span id="840">840</span>
+<span id="841">841</span>
+<span id="842">842</span>
+<span id="843">843</span>
+<span id="844">844</span>
+<span id="845">845</span>
+<span id="846">846</span>
+<span id="847">847</span>
+<span id="848">848</span>
+<span id="849">849</span>
+<span id="850">850</span>
+<span id="851">851</span>
+<span id="852">852</span>
+<span id="853">853</span>
+<span id="854">854</span>
+<span id="855">855</span>
+<span id="856">856</span>
+<span id="857">857</span>
+<span id="858">858</span>
+<span id="859">859</span>
+<span id="860">860</span>
+<span id="861">861</span>
+<span id="862">862</span>
+<span id="863">863</span>
+<span id="864">864</span>
+<span id="865">865</span>
+<span id="866">866</span>
+<span id="867">867</span>
+<span id="868">868</span>
+<span id="869">869</span>
+<span id="870">870</span>
+<span id="871">871</span>
+<span id="872">872</span>
+<span id="873">873</span>
+<span id="874">874</span>
+<span id="875">875</span>
+<span id="876">876</span>
+<span id="877">877</span>
+<span id="878">878</span>
+<span id="879">879</span>
+<span id="880">880</span>
+<span id="881">881</span>
+<span id="882">882</span>
+<span id="883">883</span>
+<span id="884">884</span>
+<span id="885">885</span>
+<span id="886">886</span>
+<span id="887">887</span>
+<span id="888">888</span>
+<span id="889">889</span>
+<span id="890">890</span>
+<span id="891">891</span>
+<span id="892">892</span>
+<span id="893">893</span>
+<span id="894">894</span>
+<span id="895">895</span>
+<span id="896">896</span>
+<span id="897">897</span>
+<span id="898">898</span>
+<span id="899">899</span>
+<span id="900">900</span>
+<span id="901">901</span>
+<span id="902">902</span>
+<span id="903">903</span>
+<span id="904">904</span>
+<span id="905">905</span>
+<span id="906">906</span>
+<span id="907">907</span>
+<span id="908">908</span>
+<span id="909">909</span>
+<span id="910">910</span>
+<span id="911">911</span>
+<span id="912">912</span>
+<span id="913">913</span>
+<span id="914">914</span>
+<span id="915">915</span>
+<span id="916">916</span>
+<span id="917">917</span>
+<span id="918">918</span>
+<span id="919">919</span>
+<span id="920">920</span>
+<span id="921">921</span>
+<span id="922">922</span>
+<span id="923">923</span>
+<span id="924">924</span>
+<span id="925">925</span>
+<span id="926">926</span>
+<span id="927">927</span>
+<span id="928">928</span>
+<span id="929">929</span>
+<span id="930">930</span>
+<span id="931">931</span>
+<span id="932">932</span>
+<span id="933">933</span>
+<span id="934">934</span>
+<span id="935">935</span>
+<span id="936">936</span>
+<span id="937">937</span>
+<span id="938">938</span>
+<span id="939">939</span>
+<span id="940">940</span>
+<span id="941">941</span>
+<span id="942">942</span>
+<span id="943">943</span>
+<span id="944">944</span>
+<span id="945">945</span>
+<span id="946">946</span>
+<span id="947">947</span>
+<span id="948">948</span>
+<span id="949">949</span>
+<span id="950">950</span>
+<span id="951">951</span>
+<span id="952">952</span>
+<span id="953">953</span>
+<span id="954">954</span>
+<span id="955">955</span>
+<span id="956">956</span>
+<span id="957">957</span>
+<span id="958">958</span>
+<span id="959">959</span>
+<span id="960">960</span>
+<span id="961">961</span>
+<span id="962">962</span>
+<span id="963">963</span>
+<span id="964">964</span>
+<span id="965">965</span>
+<span id="966">966</span>
+<span id="967">967</span>
+<span id="968">968</span>
+<span id="969">969</span>
+<span id="970">970</span>
+<span id="971">971</span>
+<span id="972">972</span>
+<span id="973">973</span>
+<span id="974">974</span>
+<span id="975">975</span>
+<span id="976">976</span>
+<span id="977">977</span>
+<span id="978">978</span>
+<span id="979">979</span>
+<span id="980">980</span>
+<span id="981">981</span>
+<span id="982">982</span>
+<span id="983">983</span>
+<span id="984">984</span>
+<span id="985">985</span>
+<span id="986">986</span>
+<span id="987">987</span>
+<span id="988">988</span>
+<span id="989">989</span>
+<span id="990">990</span>
+<span id="991">991</span>
+<span id="992">992</span>
+<span id="993">993</span>
+<span id="994">994</span>
+<span id="995">995</span>
+<span id="996">996</span>
+<span id="997">997</span>
+<span id="998">998</span>
+<span id="999">999</span>
+<span id="1000">1000</span>
+<span id="1001">1001</span>
+<span id="1002">1002</span>
+<span id="1003">1003</span>
+<span id="1004">1004</span>
+<span id="1005">1005</span>
+<span id="1006">1006</span>
+<span id="1007">1007</span>
+<span id="1008">1008</span>
+<span id="1009">1009</span>
+<span id="1010">1010</span>
+<span id="1011">1011</span>
+<span id="1012">1012</span>
+<span id="1013">1013</span>
+<span id="1014">1014</span>
+<span id="1015">1015</span>
+<span id="1016">1016</span>
+<span id="1017">1017</span>
+<span id="1018">1018</span>
+<span id="1019">1019</span>
+<span id="1020">1020</span>
+<span id="1021">1021</span>
+<span id="1022">1022</span>
+<span id="1023">1023</span>
+<span id="1024">1024</span>
+<span id="1025">1025</span>
+<span id="1026">1026</span>
+<span id="1027">1027</span>
+<span id="1028">1028</span>
+</pre><pre class="rust"><code><span class="kw">use </span>std::str::FromStr;
+<span class="kw">use </span>std::sync::Arc;
+
+<span class="kw">use </span><span class="kw">crate</span>::binding::parse_invoice;
+<span class="kw">use </span><span class="kw">crate</span>::chain::{ChainService, MempoolSpace, OnchainTx};
+<span class="kw">use </span><span class="kw">crate</span>::grpc::{AddFundInitRequest, GetSwapPaymentRequest};
+<span class="kw">use </span>anyhow::{anyhow, <span class="prelude-ty">Result</span>};
+<span class="kw">use </span>bitcoin::blockdata::constants::WITNESS_SCALE_FACTOR;
+<span class="kw">use </span>bitcoin::blockdata::opcodes;
+<span class="kw">use </span>bitcoin::blockdata::script::Builder;
+<span class="kw">use </span>bitcoin::psbt::serialize::Serialize;
+<span class="kw">use </span>bitcoin::secp256k1::{Message, PublicKey, Secp256k1, SecretKey};
+<span class="kw">use </span>bitcoin::util::sighash::SighashCache;
+<span class="kw">use </span>bitcoin::{
+    Address, EcdsaSighashType, OutPoint, Script, Sequence, Transaction, TxIn, TxOut, Txid, Witness,
+};
+
+<span class="kw">use </span>bitcoin_hashes::hex::FromHex;
+<span class="kw">use </span>bitcoin_hashes::sha256;
+<span class="kw">use </span>rand::Rng;
+<span class="kw">use </span>ripemd::{Digest, Ripemd160};
+
+<span class="kw">use </span><span class="kw">crate</span>::breez_services::{BreezEvent, BreezServer, PaymentReceiver, Receiver};
+<span class="kw">use </span><span class="kw">crate</span>::models::{Swap, SwapInfo, SwapStatus, SwapperAPI};
+
+<span class="attribute">#[derive(Clone)]
+</span><span class="kw">struct </span>Utxo {
+    out: OutPoint,
+    value: u32,
+    block_height: u32,
+}
+
+<span class="attribute">#[tonic::async_trait]
+</span><span class="kw">impl </span>SwapperAPI <span class="kw">for </span>BreezServer {
+    <span class="kw">async fn </span>create_swap(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        hash: Vec&lt;u8&gt;,
+        payer_pubkey: Vec&lt;u8&gt;,
+        node_id: String,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Swap&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>fund_client = <span class="self">self</span>.get_fund_manager_client().<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>request = AddFundInitRequest {
+            hash: hash.clone(),
+            pubkey: payer_pubkey.clone(),
+            node_id,
+            notification_token: <span class="string">&quot;&quot;</span>.to_string(),
+        };
+
+        <span class="kw">let </span>result = fund_client.add_fund_init(request).<span class="kw">await</span><span class="question-mark">?</span>.into_inner();
+        <span class="prelude-val">Ok</span>(Swap {
+            bitcoin_address: result.address,
+            swapper_pubkey: result.pubkey,
+            lock_height: result.lock_height,
+            max_allowed_deposit: result.max_allowed_deposit,
+            error_message: result.error_message,
+            required_reserve: result.required_reserve,
+            min_allowed_deposit: result.min_allowed_deposit,
+        })
+    }
+
+    <span class="kw">async fn </span>complete_swap(<span class="kw-2">&amp;</span><span class="self">self</span>, bolt11: String) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>request = GetSwapPaymentRequest {
+            payment_request: bolt11,
+        };
+        <span class="self">self</span>.get_fund_manager_client()
+            .<span class="kw">await</span><span class="question-mark">?
+            </span>.get_swap_payment(request)
+            .<span class="kw">await</span><span class="question-mark">?
+            </span>.into_inner();
+        <span class="prelude-val">Ok</span>(())
+    }
+}
+
+<span class="doccomment">/// This struct is responsible for handling on-chain funds with lightning payments.
+/// It uses internally an implementation of SwapperAPI that represents the actualy swapper service.
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>BTCReceiveSwap {
+    network: bitcoin::Network,
+    swapper_api: Arc&lt;<span class="kw">dyn </span>SwapperAPI&gt;,
+    persister: Arc&lt;<span class="kw">crate</span>::persist::db::SqliteStorage&gt;,
+    chain_service: Arc&lt;<span class="kw">dyn </span>ChainService&gt;,
+    payment_receiver: Arc&lt;<span class="kw">dyn </span>Receiver&gt;,
+}
+
+<span class="kw">impl </span>BTCReceiveSwap {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(
+        network: bitcoin::Network,
+        swapper_api: Arc&lt;<span class="kw">dyn </span>SwapperAPI&gt;,
+        persister: Arc&lt;<span class="kw">crate</span>::persist::db::SqliteStorage&gt;,
+        chain_service: Arc&lt;MempoolSpace&gt;,
+        payment_receiver: Arc&lt;PaymentReceiver&gt;,
+    ) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            network,
+            swapper_api,
+            persister,
+            chain_service,
+            payment_receiver,
+        }
+    }
+
+    <span class="doccomment">/// Listening to events is required in order to:
+    /// * Refresh on-chain status of swap addresses.
+    /// * Refresh lighting status of swap addresses, e.g lookup for corresponding lightning payment
+    /// * Redeem funds related to swap addresses, e.g when on chain funds are discovered use the SwapperAPI to
+    ///   request payment by passing bolt11 invoice.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async fn </span>on_event(<span class="kw-2">&amp;</span><span class="self">self</span>, e: BreezEvent) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">match </span>e {
+            BreezEvent::NewBlock { block: tip } =&gt; {
+                <span class="macro">debug!</span>(<span class="string">&quot;got chain event {:?}&quot;</span>, e);
+                <span class="kw">let </span><span class="kw-2">mut </span>to_check = <span class="self">self</span>.list_swaps(SwapStatus::Initial)<span class="question-mark">?</span>;
+                to_check.extend(<span class="self">self</span>.list_refundables()<span class="question-mark">?</span>);
+
+                <span class="kw">let </span><span class="kw-2">mut </span>redeemable_swaps: Vec&lt;SwapInfo&gt; = Vec::new();
+                <span class="kw">for </span>s <span class="kw">in </span>to_check {
+                    <span class="kw">let </span>address = s.bitcoin_address.clone();
+                    <span class="kw">let </span>refresh_status = <span class="self">self
+                        </span>.refresh_swap_on_chain_status(address.clone(), tip)
+                        .<span class="kw">await</span>;
+                    <span class="kw">match </span>refresh_status {
+                        <span class="prelude-val">Ok</span>(updated) =&gt; {
+                            <span class="macro">debug!</span>(
+                                <span class="string">&quot;swap status refreshed for address: {} redeemable={}&quot;</span>,
+                                address.clone(),
+                                updated.redeemable()
+                            );
+                            <span class="kw">if </span>updated.redeemable() {
+                                redeemable_swaps.push(updated);
+                            }
+                        }
+                        <span class="prelude-val">Err</span>(e) =&gt; {
+                            <span class="macro">error!</span>(
+                                <span class="string">&quot;failed to refresh status for address {}: {}&quot;</span>,
+                                address.clone(),
+                                e
+                            );
+                        }
+                    };
+                }
+
+                <span class="comment">// redeem swaps
+                </span><span class="kw">for </span>s <span class="kw">in </span>redeemable_swaps {
+                    <span class="kw">let </span>redeem_res = <span class="self">self</span>.redeem_swap(s.bitcoin_address.clone()).<span class="kw">await</span>;
+
+                    <span class="kw">if </span>redeem_res.is_err() {
+                        <span class="macro">error!</span>(
+                            <span class="string">&quot;failed to redeem swap {:?}: {} {}&quot;</span>,
+                            redeem_res.err().unwrap(),
+                            s.bitcoin_address,
+                            s.bolt11.unwrap_or_default(),
+                        );
+                    } <span class="kw">else </span>{
+                        <span class="macro">info!</span>(
+                            <span class="string">&quot;succeed to redeem swap {:?}: {}&quot;</span>,
+                            s.bitcoin_address,
+                            s.bolt11.unwrap_or_default()
+                        )
+                    }
+                }
+            }
+
+            <span class="comment">// When invoice is paid we lookup for a swap that matches the same hash.
+            // In case we find one, we update its paid amount.
+            </span>BreezEvent::InvoicePaid { details } =&gt; {
+                <span class="macro">debug!</span>(<span class="string">&quot;swap InvoicePaid event!&quot;</span>);
+                <span class="kw">let </span>hash_raw = hex::decode(details.payment_hash.clone())<span class="question-mark">?</span>;
+                <span class="kw">let </span>swap_info = <span class="self">self</span>.persister.get_swap_info_by_hash(<span class="kw-2">&amp;</span>hash_raw)<span class="question-mark">?</span>;
+                <span class="kw">if </span>swap_info.is_some() {
+                    <span class="kw">let </span>payment = <span class="self">self</span>.persister.get_payment_by_hash(<span class="kw-2">&amp;</span>details.payment_hash)<span class="question-mark">?</span>;
+                    <span class="kw">if </span>payment.is_some() {
+                        <span class="self">self</span>.persister.update_swap_paid_amount(
+                            swap_info.unwrap().bitcoin_address,
+                            payment.unwrap().amount_msat <span class="kw">as </span>u32,
+                        )<span class="question-mark">?</span>;
+                    }
+                }
+            }
+            <span class="kw">_ </span>=&gt; {} <span class="comment">// skip events were are not interested in
+        </span>}
+
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="doccomment">/// Create a [SwapInfo] that represents the details of an on-going swap.
+    ///
+    /// See [SwapInfo] for details.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async fn </span>create_swap_address(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;SwapInfo&gt; {
+        <span class="kw">let </span>node_state = <span class="self">self</span>.persister.get_node_state()<span class="question-mark">?</span>;
+        <span class="kw">if </span>node_state.is_none() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;node is not initialized&quot;</span>));
+        }
+        <span class="kw">let </span>node_id = node_state.unwrap().id;
+        <span class="comment">// create swap keys
+        </span><span class="kw">let </span>swap_keys = create_swap_keys()<span class="question-mark">?</span>;
+        <span class="kw">let </span>secp = Secp256k1::new();
+        <span class="kw">let </span>private_key = SecretKey::from_slice(<span class="kw-2">&amp;</span>swap_keys.priv_key)<span class="question-mark">?</span>;
+        <span class="kw">let </span>pubkey = PublicKey::from_secret_key(<span class="kw-2">&amp;</span>secp, <span class="kw-2">&amp;</span>private_key)
+            .serialize()
+            .to_vec();
+        <span class="kw">let </span>hash = Message::from_hashed_data::&lt;sha256::Hash&gt;(<span class="kw-2">&amp;</span>swap_keys.preimage[..])
+            .as_ref()
+            .to_vec();
+
+        <span class="comment">// use swap API to fetch a new swap address
+        </span><span class="kw">let </span>swap_reply = <span class="self">self
+            </span>.swapper_api
+            .create_swap(hash.clone(), pubkey.clone(), node_id)
+            .<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="comment">// calculate the submarine swap script
+        </span><span class="kw">let </span>our_script = create_submarine_swap_script(
+            hash.clone(),
+            swap_reply.swapper_pubkey.clone(),
+            pubkey.clone(),
+            swap_reply.lock_height,
+        )<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>address = Address::p2wsh(<span class="kw-2">&amp;</span>our_script, <span class="self">self</span>.network);
+        <span class="kw">let </span>address_str = address.to_string();
+
+        <span class="comment">// Ensure our address generation match the service
+        </span><span class="kw">if </span>address_str != swap_reply.bitcoin_address {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;wrong address&quot;</span>));
+        }
+
+        <span class="kw">let </span>swap_info = SwapInfo {
+            bitcoin_address: swap_reply.bitcoin_address,
+            created_at: <span class="number">0</span>,
+            lock_height: swap_reply.lock_height,
+            payment_hash: hash.clone(),
+            preimage: swap_keys.preimage,
+            private_key: swap_keys.priv_key.to_vec(),
+            public_key: pubkey.clone(),
+            swapper_public_key: swap_reply.swapper_pubkey.clone(),
+            script: our_script.as_bytes().to_vec(),
+            bolt11: <span class="prelude-val">None</span>,
+            paid_sats: <span class="number">0</span>,
+            confirmed_sats: <span class="number">0</span>,
+            refund_tx_ids: Vec::new(),
+            confirmed_tx_ids: Vec::new(),
+            status: SwapStatus::Initial,
+            min_allowed_deposit: swap_reply.min_allowed_deposit,
+            max_allowed_deposit: swap_reply.max_allowed_deposit,
+        };
+
+        <span class="comment">// persist the address
+        </span><span class="self">self</span>.persister.insert_swap(swap_info.clone())<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(swap_info)
+
+        <span class="comment">// return swap.bitcoinAddress;
+    </span>}
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>list_refundables(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;SwapInfo&gt;&gt; {
+        <span class="prelude-val">Ok</span>(<span class="self">self
+            </span>.list_swaps(SwapStatus::Expired)<span class="question-mark">?
+            </span>.into_iter()
+            .filter(|s| s.confirmed_sats &gt; s.paid_sats)
+            .collect())
+    }
+
+    <span class="attribute">#[allow(dead_code)]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>list_redeemables(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;SwapInfo&gt;&gt; {
+        <span class="prelude-val">Ok</span>(<span class="self">self
+            </span>.list_swaps(SwapStatus::Initial)<span class="question-mark">?
+            </span>.into_iter()
+            .filter(SwapInfo::redeemable)
+            .collect())
+    }
+
+    <span class="attribute">#[allow(dead_code)]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get_swap_info(<span class="kw-2">&amp;</span><span class="self">self</span>, address: String) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;SwapInfo&gt;&gt; {
+        <span class="self">self</span>.persister.get_swap_info_by_address(address)
+    }
+
+    <span class="kw">fn </span>list_swaps(<span class="kw-2">&amp;</span><span class="self">self</span>, status: SwapStatus) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;SwapInfo&gt;&gt; {
+        <span class="self">self</span>.persister.list_swaps_with_status(status)
+    }
+
+    <span class="doccomment">/// refreshes the on-chain status of the swap. This method updates the following information
+    /// on a SwapInfo and save it to the persistent storage:
+    /// confirmed_sats - the number of unspent satoshis that were sent to this address
+    /// confirmed_txs - all utxo that are sent to this address
+    /// swap_status - Either Initial or Expired.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async fn </span>refresh_swap_on_chain_status(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        bitcoin_address: String,
+        current_tip: u32,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;SwapInfo&gt; {
+        <span class="kw">let </span>swap_info = <span class="self">self
+            </span>.persister
+            .get_swap_info_by_address(bitcoin_address.clone())<span class="question-mark">?
+            </span>.ok_or_else(|| {
+                <span class="macro">anyhow!</span>(<span class="macro">format!</span>(
+                    <span class="string">&quot;swap address {} was not found&quot;</span>,
+                    bitcoin_address.clone()
+                ))
+            })<span class="question-mark">?</span>;
+        <span class="kw">let </span>txs = <span class="self">self
+            </span>.chain_service
+            .address_transactions(bitcoin_address.clone())
+            .<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>utxos = get_utxos(bitcoin_address.clone(), txs.clone())<span class="question-mark">?</span>;
+        <span class="kw">let </span>confirmed_sats: u32 = utxos.iter().fold(<span class="number">0</span>, |accum, item| accum + item.value);
+
+        <span class="kw">let </span>confirmed_block = utxos.iter().fold(<span class="number">0</span>, |b, item| {
+            <span class="kw">if </span>item.block_height != <span class="number">0 </span>|| item.block_height &lt; b {
+                item.block_height
+            } <span class="kw">else </span>{
+                b
+            }
+        });
+
+        <span class="kw">let </span><span class="kw-2">mut </span>swap_status = swap_info.status.clone();
+
+        <span class="kw">if </span>!txs.is_empty() &amp;&amp; current_tip - confirmed_block &gt;= swap_info.lock_height <span class="kw">as </span>u32 {
+            swap_status = SwapStatus::Expired
+        }
+
+        <span class="kw">let </span>confirmed_txs = utxos.into_iter().map(|u| u.out.txid.to_string()).collect();
+
+        <span class="macro">debug!</span>(
+            <span class="string">&quot;updating swap on-chain info {:?}: confirmed_sats={:?} refund_tx_ids={:?}, confirmed_tx_ids={:?} swap_status={:?}&quot;</span>,
+            bitcoin_address.clone(), confirmed_sats, swap_info.refund_tx_ids, confirmed_txs, swap_status
+        );
+
+        <span class="kw">let </span>payment = <span class="self">self
+            </span>.persister
+            .get_payment_by_hash(<span class="kw-2">&amp;</span>hex::encode(swap_info.payment_hash.clone()))<span class="question-mark">?</span>;
+        <span class="macro">print!</span>(
+            <span class="string">&quot;found payment for hash {:?}, {:?}&quot;</span>,
+            <span class="kw-2">&amp;</span>hex::encode(swap_info.payment_hash.clone()),
+            payment
+        );
+        <span class="kw">if </span>payment.is_some() {
+            <span class="self">self</span>.persister.update_swap_paid_amount(
+                bitcoin_address.clone(),
+                payment.unwrap().amount_msat <span class="kw">as </span>u32,
+            )<span class="question-mark">?</span>;
+        }
+
+        <span class="self">self</span>.persister.update_swap_chain_info(
+            bitcoin_address,
+            confirmed_sats,
+            swap_info.refund_tx_ids,
+            confirmed_txs,
+            swap_status,
+        )
+    }
+
+    <span class="doccomment">/// redeem_swap executes the final step of receiving lightning payment
+    /// in exchange for the on chain funds.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async fn </span>redeem_swap(<span class="kw-2">&amp;</span><span class="self">self</span>, bitcoin_address: String) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>swap_info = <span class="self">self
+            </span>.persister
+            .get_swap_info_by_address(bitcoin_address.clone())<span class="question-mark">?
+            </span>.ok_or_else(|| <span class="macro">anyhow!</span>(<span class="macro">format!</span>(<span class="string">&quot;swap address {} was not found&quot;</span>, bitcoin_address)))<span class="question-mark">?</span>;
+
+        <span class="comment">// we are creating and invoice for this swap if we didn&#39;t
+        // do it already
+        </span><span class="kw">if </span>swap_info.bolt11.is_none() {
+            <span class="kw">let </span>invoice = <span class="self">self
+                </span>.payment_receiver
+                .receive_payment(
+                    swap_info.confirmed_sats <span class="kw">as </span>u64,
+                    String::from(<span class="string">&quot;Bitcoin Transfer&quot;</span>),
+                    <span class="prelude-val">Some</span>(swap_info.preimage),
+                )
+                .<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="self">self</span>.persister
+                .update_swap_bolt11(bitcoin_address.clone(), invoice.bolt11)<span class="question-mark">?</span>;
+            swap_info = <span class="self">self
+                </span>.persister
+                .get_swap_info_by_address(bitcoin_address.clone())<span class="question-mark">?
+                </span>.unwrap();
+        }
+
+        <span class="comment">// Making sure the invoice amount matches the on-chain amount
+        </span><span class="kw">let </span>payreq = swap_info.bolt11.unwrap();
+        <span class="kw">let </span>ln_invoice = parse_invoice(payreq.clone())<span class="question-mark">?</span>;
+        <span class="macro">debug!</span>(<span class="string">&quot;swap info confirmed = {}&quot;</span>, swap_info.confirmed_sats);
+        <span class="kw">if </span>ln_invoice.amount_msat.unwrap() != (swap_info.confirmed_sats <span class="kw">as </span>u64 * <span class="number">1000</span>) {
+            <span class="macro">warn!</span>(
+                <span class="string">&quot;invoice amount doesn&#39;t match confirmed sats {:?}&quot;</span>,
+                ln_invoice.amount_msat.unwrap()
+            );
+            <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;invoice amount doesn&#39;t match confirmed sats&quot;</span>));
+        }
+
+        <span class="comment">// Asking the service to initiate the lightning payment.
+        </span><span class="self">self</span>.swapper_api.complete_swap(payreq.clone()).<span class="kw">await
+    </span>}
+
+    <span class="comment">// refund_swap is the user way to receive on-chain refund for failed swaps.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async fn </span>refund_swap(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        swap_address: String,
+        to_address: String,
+        sat_per_vbyte: u32,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; {
+        <span class="kw">let </span>swap_info = <span class="self">self
+            </span>.persister
+            .get_swap_info_by_address(swap_address.clone())<span class="question-mark">?
+            </span>.ok_or_else(|| <span class="macro">anyhow!</span>(<span class="macro">format!</span>(<span class="string">&quot;swap address {} was not found&quot;</span>, swap_address)))<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>transactions = <span class="self">self
+            </span>.chain_service
+            .address_transactions(swap_address.clone())
+            .<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>utxos = get_utxos(swap_address, transactions)<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>script = create_submarine_swap_script(
+            swap_info.payment_hash,
+            swap_info.swapper_public_key,
+            swap_info.public_key,
+            swap_info.lock_height,
+        )<span class="question-mark">?</span>;
+        <span class="kw">let </span>refund_tx = create_refund_tx(
+            utxos.clone(),
+            swap_info.private_key,
+            to_address,
+            swap_info.lock_height <span class="kw">as </span>u32,
+            script,
+            sat_per_vbyte,
+        )<span class="question-mark">?</span>;
+        <span class="kw">let </span>txid = <span class="self">self</span>.chain_service.broadcast_transaction(refund_tx).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>refunded_tx_ids = swap_info.refund_tx_ids.clone();
+        refunded_tx_ids.push(txid.clone());
+
+        <span class="self">self</span>.persister.update_swap_chain_info(
+            swap_info.bitcoin_address,
+            swap_info.confirmed_sats,
+            refunded_tx_ids,
+            utxos
+                .clone()
+                .into_iter()
+                .map(|u| u.out.txid.to_string())
+                .collect(),
+            swap_info.status,
+        )<span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(txid)
+    }
+}
+
+<span class="kw">struct </span>SwapKeys {
+    <span class="kw">pub </span>priv_key: Vec&lt;u8&gt;,
+    <span class="kw">pub </span>preimage: Vec&lt;u8&gt;,
+}
+
+<span class="kw">fn </span>create_swap_keys() -&gt; <span class="prelude-ty">Result</span>&lt;SwapKeys&gt; {
+    <span class="kw">let </span>priv_key = rand::thread_rng().gen::&lt;[u8; <span class="number">32</span>]&gt;().to_vec();
+    <span class="kw">let </span>preimage = rand::thread_rng().gen::&lt;[u8; <span class="number">32</span>]&gt;().to_vec();
+    <span class="prelude-val">Ok</span>(SwapKeys { priv_key, preimage })
+}
+
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>create_submarine_swap_script(
+    invoice_hash: Vec&lt;u8&gt;,
+    swapper_pub_key: Vec&lt;u8&gt;,
+    payer_pub_key: Vec&lt;u8&gt;,
+    lock_height: i64,
+) -&gt; <span class="prelude-ty">Result</span>&lt;Script&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>hasher = Ripemd160::new();
+    hasher.update(invoice_hash);
+    <span class="kw">let </span>result = hasher.finalize();
+
+    <span class="prelude-val">Ok</span>(Builder::new()
+        .push_opcode(opcodes::all::OP_HASH160)
+        .push_slice(<span class="kw-2">&amp;</span>result[..])
+        .push_opcode(opcodes::all::OP_EQUAL)
+        .push_opcode(opcodes::all::OP_IF)
+        .push_slice(<span class="kw-2">&amp;</span>swapper_pub_key[..])
+        .push_opcode(opcodes::all::OP_ELSE)
+        .push_int(lock_height)
+        .push_opcode(opcodes::all::OP_CSV)
+        .push_opcode(opcodes::all::OP_DROP)
+        .push_slice(<span class="kw-2">&amp;</span>payer_pub_key[..])
+        .push_opcode(opcodes::all::OP_ENDIF)
+        .push_opcode(opcodes::all::OP_CHECKSIG)
+        .into_script())
+}
+
+<span class="kw">fn </span>get_utxos(swap_address: String, transactions: Vec&lt;OnchainTx&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;Utxo&gt;&gt; {
+    <span class="comment">// calcualte confirmed amount associated with this address
+    </span><span class="kw">let </span><span class="kw-2">mut </span>spent_outputs: Vec&lt;OutPoint&gt; = Vec::new();
+    <span class="kw">let </span><span class="kw-2">mut </span>utxos: Vec&lt;Utxo&gt; = Vec::new();
+    <span class="kw">for </span>(<span class="kw">_</span>, tx) <span class="kw">in </span>transactions.iter().enumerate() {
+        <span class="kw">for </span>(<span class="kw">_</span>, vin) <span class="kw">in </span>tx.vin.iter().enumerate() {
+            <span class="kw">if </span>tx.status.confirmed &amp;&amp; vin.prevout.scriptpubkey_address == swap_address.clone() {
+                spent_outputs.push(OutPoint {
+                    txid: Txid::from_hex(vin.txid.as_str())<span class="question-mark">?</span>,
+                    vout: vin.vout,
+                })
+            }
+        }
+    }
+
+    <span class="kw">for </span>(_i, tx) <span class="kw">in </span>transactions.iter().enumerate() {
+        <span class="kw">for </span>(index, vout) <span class="kw">in </span>tx.vout.iter().enumerate() {
+            <span class="kw">if </span>tx.status.confirmed &amp;&amp; vout.scriptpubkey_address == swap_address {
+                <span class="kw">let </span>outpoint = OutPoint {
+                    txid: Txid::from_hex(tx.txid.as_str())<span class="question-mark">?</span>,
+                    vout: index <span class="kw">as </span>u32,
+                };
+                <span class="kw">if </span>!spent_outputs.contains(<span class="kw-2">&amp;</span>outpoint) {
+                    utxos.push(Utxo {
+                        out: outpoint,
+                        value: vout.value,
+                        block_height: tx.status.block_height,
+                    });
+                }
+            }
+        }
+    }
+    <span class="prelude-val">Ok</span>(utxos)
+}
+
+<span class="doccomment">/// Creating the refund transaction that is to be used by the user in case where the swap has
+/// expired.
+</span><span class="kw">fn </span>create_refund_tx(
+    utxos: Vec&lt;Utxo&gt;,
+    private_key: Vec&lt;u8&gt;,
+    to_address: String,
+    lock_delay: u32,
+    input_script: Script,
+    sat_per_vbyte: u32,
+) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;u8&gt;&gt; {
+    <span class="kw">if </span>utxos.is_empty() {
+        <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(<span class="string">&quot;must have at least one input&quot;</span>));
+    }
+
+    <span class="kw">let </span>lock_time = utxos.iter().fold(<span class="number">0</span>, |accum, item| {
+        <span class="kw">if </span>accum &gt;= item.block_height + lock_delay {
+            accum
+        } <span class="kw">else </span>{
+            item.block_height + lock_delay
+        }
+    });
+
+    <span class="kw">let </span>confirmed_amount: u64 = utxos
+        .iter()
+        .fold(<span class="number">0</span>, |accum, item| accum + item.value <span class="kw">as </span>u64);
+
+    <span class="comment">// create the tx inputs
+    </span><span class="kw">let </span>txins: Vec&lt;TxIn&gt; = utxos
+        .iter()
+        .map(|utxo| TxIn {
+            previous_output: utxo.out,
+            script_sig: Script::new(),
+            sequence: Sequence(lock_delay),
+            witness: Witness::default(),
+        })
+        .collect();
+
+    <span class="comment">// create the tx outputs
+    </span><span class="kw">let </span>btc_address = Address::from_str(<span class="kw-2">&amp;</span>to_address)<span class="question-mark">?</span>;
+    <span class="kw">let </span>tx_out: Vec&lt;TxOut&gt; = <span class="macro">vec!</span>[TxOut {
+        value: confirmed_amount,
+        script_pubkey: btc_address.script_pubkey(),
+    }];
+
+    <span class="comment">// construct the transaction
+    </span><span class="kw">let </span><span class="kw-2">mut </span>tx = Transaction {
+        version: <span class="number">2</span>,
+        lock_time: bitcoin::PackedLockTime(lock_time),
+        input: txins.clone(),
+        output: tx_out,
+    };
+
+    <span class="attribute">#[allow(clippy::identity_op)] </span><span class="comment">// Allow &quot;+ 0&quot; term in sum below for clarity
+    </span><span class="kw">let </span>refund_witness_input_size: u32 = <span class="number">1 </span>+ <span class="number">1 </span>+ <span class="number">73 </span>+ <span class="number">1 </span>+ <span class="number">0 </span>+ <span class="number">1 </span>+ <span class="number">100</span>;
+    <span class="kw">let </span>tx_weight = tx.strippedsize() <span class="kw">as </span>u32 * WITNESS_SCALE_FACTOR <span class="kw">as </span>u32
+        + refund_witness_input_size * txins.len() <span class="kw">as </span>u32;
+    <span class="kw">let </span>fees: u64 = (tx_weight * sat_per_vbyte / WITNESS_SCALE_FACTOR <span class="kw">as </span>u32) <span class="kw">as </span>u64;
+    tx.output[<span class="number">0</span>].value = confirmed_amount - fees;
+
+    <span class="kw">let </span>scpt = Secp256k1::signing_only();
+
+    <span class="comment">// go over all inputs and sign them
+    </span><span class="kw">let </span><span class="kw-2">mut </span>signed_inputs: Vec&lt;TxIn&gt; = Vec::new();
+    <span class="kw">for </span>(index, input) <span class="kw">in </span>tx.input.iter().enumerate() {
+        <span class="kw">let </span><span class="kw-2">mut </span>signer = SighashCache::new(<span class="kw-2">&amp;</span>tx);
+        <span class="kw">let </span>sig = signer.segwit_signature_hash(
+            index,
+            <span class="kw-2">&amp;</span>input_script,
+            utxos[index].value <span class="kw">as </span>u64,
+            EcdsaSighashType::All,
+        )<span class="question-mark">?</span>;
+        <span class="kw">let </span>msg = Message::from_slice(<span class="kw-2">&amp;</span>sig[..])<span class="question-mark">?</span>;
+        <span class="kw">let </span>secret_key = SecretKey::from_slice(private_key.as_slice())<span class="question-mark">?</span>;
+        <span class="kw">let </span>sig = scpt.sign_ecdsa(<span class="kw-2">&amp;</span>msg, <span class="kw-2">&amp;</span>secret_key);
+
+        <span class="kw">let </span><span class="kw-2">mut </span>sigvec = sig.serialize_der().to_vec();
+        sigvec.push(EcdsaSighashType::All <span class="kw">as </span>u8);
+
+        <span class="kw">let </span>witness: Vec&lt;Vec&lt;u8&gt;&gt; = <span class="macro">vec!</span>[sigvec, <span class="macro">vec!</span>[], input_script.serialize()];
+
+        <span class="kw">let </span><span class="kw-2">mut </span>signed_input = input.clone();
+        <span class="kw">let </span>w = Witness::from_vec(witness);
+        signed_input.witness = w;
+        signed_inputs.push(signed_input);
+    }
+    tx.input = signed_inputs;
+
+    <span class="comment">//tx.output[0].value = confirmed_amount;
+    </span><span class="prelude-val">Ok</span>(tx.serialize())
+}
+
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use </span>std::sync::Arc;
+
+    <span class="kw">use </span>bitcoin::{
+        secp256k1::{Message, PublicKey, Secp256k1, SecretKey},
+        OutPoint, Txid,
+    };
+    <span class="kw">use </span>bitcoin_hashes::{hex::FromHex, sha256};
+    <span class="kw">use </span>ripemd::{Digest, Ripemd160};
+
+    <span class="kw">use crate</span>::{
+        breez_services::tests::get_dummy_node_state,
+        chain::{ChainService, OnchainTx},
+        models::<span class="kw-2">*</span>,
+        persist::db::SqliteStorage,
+        swap::{BTCReceiveSwap, Utxo},
+        test_utils::{
+            create_test_config, create_test_persister, MockChainService, MockReceiver,
+            MockSwapperAPI,
+        },
+        BreezEvent,
+    };
+
+    <span class="kw">use super</span>::{create_refund_tx, create_submarine_swap_script, create_swap_keys, get_utxos};
+
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_build_swap_script() {
+        <span class="comment">// swap payer private/public key pair
+        // swap payer public key
+        </span><span class="kw">let </span>secp = Secp256k1::new();
+        <span class="kw">let </span>private_key = SecretKey::from_slice(
+            <span class="kw-2">&amp;</span>hex::decode(<span class="string">&quot;1ab3fe9f94ff1332d6f198484c3677832d1162781f86ce85f6d7587fa97f0330&quot;</span>)
+                .unwrap(),
+        )
+        .unwrap();
+        <span class="kw">let </span>pub_key = PublicKey::from_secret_key(<span class="kw-2">&amp;</span>secp, <span class="kw-2">&amp;</span>private_key)
+            .serialize()
+            .to_vec();
+
+        <span class="comment">// Another pair for preimage/hash
+        </span><span class="kw">let </span>preimage =
+            hex::decode(<span class="string">&quot;4bedf04d0e1ed625e8863163e26abe4e1e6e3e9e5a25fa28cf4fe89500aadd46&quot;</span>)
+                .unwrap();
+        <span class="kw">let </span>hash = Message::from_hashed_data::&lt;sha256::Hash&gt;(<span class="kw-2">&amp;</span>preimage.clone()[..])
+            .as_ref()
+            .to_vec();
+
+        <span class="comment">// refund lock height
+        </span><span class="kw">let </span>lock_height = <span class="number">288</span>;
+
+        <span class="comment">// swapper pubkey
+        </span><span class="kw">let </span>swapper_pubkey =
+            hex::decode(<span class="string">&quot;02b7952870655802bf863fd180de26ceec466d5454da949b159da8c1bf0cb3fe88&quot;</span>)
+                .unwrap();
+
+        <span class="kw">let </span>expected_address = <span class="string">&quot;bc1qwxgj02vc9esa32ylkrqnhmvcamwtd95wndxqpdwk4mh9pj4629uqcjwv8l&quot;</span>;
+
+        <span class="comment">// create the script
+        </span><span class="kw">let </span>script =
+            create_submarine_swap_script(hash, swapper_pubkey, pub_key, lock_height).unwrap();
+
+        <span class="comment">// compare the expected and created script
+        </span><span class="kw">let </span>expected_script = <span class="string">&quot;a91458163502b02967cfb7c0f3859874db702121b5d487632102b7952870655802bf863fd180de26ceec466d5454da949b159da8c1bf0cb3fe8867022001b27521024ad3b16767cf68d59c41b9544e42340959479447a82a5cd24c320e1ce92adb0968ac&quot;</span>.to_string();
+        <span class="kw">let </span>serialized_script = hex::encode(script.as_bytes().to_vec());
+        <span class="macro">assert_eq!</span>(expected_script, serialized_script);
+
+        <span class="comment">// compare the expected and created swap address
+        </span><span class="kw">let </span>address = bitcoin::Address::p2wsh(<span class="kw-2">&amp;</span>script, bitcoin::Network::Bitcoin);
+        <span class="kw">let </span>address_str = address.to_string();
+        <span class="macro">assert_eq!</span>(address_str, expected_address);
+    }
+
+    <span class="attribute">#[tokio::test]
+    </span><span class="kw">async fn </span>test_get_utxo() {
+        <span class="kw">let </span>swap_address = String::from(<span class="string">&quot;35kRn3rF7oDFU1BFRHuQM9txBWBXqipoJ3&quot;</span>);
+        <span class="kw">let </span>txs: Vec&lt;OnchainTx&gt; = serde_json::from_str(<span class="string">r#&quot;[{&quot;txid&quot;:&quot;5e0668bf1cd24f2f8656ee82d4886f5303a06b26838e24b7db73afc59e228985&quot;,&quot;version&quot;:2,&quot;locktime&quot;:0,&quot;vin&quot;:[{&quot;txid&quot;:&quot;07c9d3fbffc20f96ea7c93ef3bcdf346c8a8456c25850ea76be62b24a7cf690c&quot;,&quot;vout&quot;:0,&quot;prevout&quot;:{&quot;scriptpubkey&quot;:&quot;001465c96c830168b8f0b584294d3b9716bb8584c2d8&quot;,&quot;scriptpubkey_asm&quot;:&quot;OP_0 OP_PUSHBYTES_20 65c96c830168b8f0b584294d3b9716bb8584c2d8&quot;,&quot;scriptpubkey_type&quot;:&quot;v0_p2wpkh&quot;,&quot;scriptpubkey_address&quot;:&quot;bc1qvhykeqcpdzu0pdvy99xnh9ckhwzcfskct6h6l2&quot;,&quot;value&quot;:263216},&quot;scriptsig&quot;:&quot;&quot;,&quot;scriptsig_asm&quot;:&quot;&quot;,&quot;witness&quot;:[&quot;3045022100a2f0ac810ce88625890f7e212d175eb1cd6b7c73ffed95a2bec06b38e0b2de060220036675c6a5c89845988cc27e7acba772e7655f2abb0575449471d8323d5900b301&quot;,&quot;026b815dddaf1687a05349d75d25911c9b6e2381e55ba72148009cfa0a577c89d9&quot;],&quot;is_coinbase&quot;:false,&quot;sequence&quot;:0},{&quot;txid&quot;:&quot;6d6766c283093e2d043ae877bb915175b3d8672a20f0459300267aaab1b5766a&quot;,&quot;vout&quot;:0,&quot;prevout&quot;:{&quot;scriptpubkey&quot;:&quot;001485b33c1937058ed08b5b122e30caf18e67ccb282&quot;,&quot;scriptpubkey_asm&quot;:&quot;OP_0 OP_PUSHBYTES_20 85b33c1937058ed08b5b122e30caf18e67ccb282&quot;,&quot;scriptpubkey_type&quot;:&quot;v0_p2wpkh&quot;,&quot;scriptpubkey_address&quot;:&quot;bc1qskencxfhqk8dpz6mzghrpjh33enuev5zh0mrjw&quot;,&quot;value&quot;:33247},&quot;scriptsig&quot;:&quot;&quot;,&quot;scriptsig_asm&quot;:&quot;&quot;,&quot;witness&quot;:[&quot;304402200272cac1a312aae2a4ee64150e5b26e611a56509a467176e38c905b632d3ce56022005497d0d3ff14911214cb0fbb22a1aa16830ba669f6ff38723684750ceb4b11a01&quot;,&quot;0397d3b72557bd2044508ee3b22d1216b3f871c0963500f8c8dc6a143ee7a6a206&quot;],&quot;is_coinbase&quot;:false,&quot;sequence&quot;:0},{&quot;txid&quot;:&quot;81af33ae00a9dadeb83b915b05742e986a470fff7456540e3f018deb94abda0e&quot;,&quot;vout&quot;:1,&quot;prevout&quot;:{&quot;scriptpubkey&quot;:&quot;001431505647092347abb0e4d2a34f6773b74a999d45&quot;,&quot;scriptpubkey_asm&quot;:&quot;OP_0 OP_PUSHBYTES_20 31505647092347abb0e4d2a34f6773b74a999d45&quot;,&quot;scriptpubkey_type&quot;:&quot;v0_p2wpkh&quot;,&quot;scriptpubkey_address&quot;:&quot;bc1qx9g9v3cfydr6hv8y62357emnka9fn8294e73yl&quot;,&quot;value&quot;:172952},&quot;scriptsig&quot;:&quot;&quot;,&quot;scriptsig_asm&quot;:&quot;&quot;,&quot;witness&quot;:[&quot;30450221008426c1b3d535f10c7cbccec6be3ea9be3514f3a86bf234584722665325283f35022010b6a617a465d1d7eea45562632f0ab80b0894da44b67fab65191a98fd9d3acb01&quot;,&quot;0221250914423379d3caf662297e8069621ca2c362cf92107388483929f4d9eb67&quot;],&quot;is_coinbase&quot;:false,&quot;sequence&quot;:0}],&quot;vout&quot;:[{&quot;scriptpubkey&quot;:&quot;001459c70c09f22b1bb007439af43b6809d6a2bc31b5&quot;,&quot;scriptpubkey_asm&quot;:&quot;OP_0 OP_PUSHBYTES_20 59c70c09f22b1bb007439af43b6809d6a2bc31b5&quot;,&quot;scriptpubkey_type&quot;:&quot;v0_p2wpkh&quot;,&quot;scriptpubkey_address&quot;:&quot;bc1qt8rscz0j9vdmqp6rnt6rk6qf663tcvd44f6gxa&quot;,&quot;value&quot;:2920},{&quot;scriptpubkey&quot;:&quot;00202c404e6e9c4d032267a29a6074c5db9333c6ccae0c9d430ced666316233d8c2f&quot;,&quot;scriptpubkey_asm&quot;:&quot;OP_0 OP_PUSHBYTES_32 2c404e6e9c4d032267a29a6074c5db9333c6ccae0c9d430ced666316233d8c2f&quot;,&quot;scriptpubkey_type&quot;:&quot;v0_p2wsh&quot;,&quot;scriptpubkey_address&quot;:&quot;bc1q93qyum5uf5pjyeaznfs8f3wmjveudn9wpjw5xr8dve33vgea3shs9jhvww&quot;,&quot;value&quot;:442557}],&quot;size&quot;:532,&quot;weight&quot;:1153,&quot;fee&quot;:23938,&quot;status&quot;:{&quot;confirmed&quot;:true,&quot;block_height&quot;:674358,&quot;block_hash&quot;:&quot;00000000000000000004c6171622f56692cc480d3c76ecae4355e69699a6ae44&quot;,&quot;block_time&quot;:1615595727}},{&quot;txid&quot;:&quot;07c9d3fbffc20f96ea7c93ef3bcdf346c8a8456c25850ea76be62b24a7cf690c&quot;,&quot;version&quot;:2,&quot;locktime&quot;:0,&quot;vin&quot;:[{&quot;txid&quot;:&quot;9332d8d11d81c3b674caff75db5543491e7f22e619ecc034bedf4a007518fe3a&quot;,&quot;vout&quot;:0,&quot;prevout&quot;:{&quot;scriptpubkey&quot;:&quot;001415f0dad74806b03612687038d4f5bab200afcf8e&quot;,&quot;scriptpubkey_asm&quot;:&quot;OP_0 OP_PUSHBYTES_20 15f0dad74806b03612687038d4f5bab200afcf8e&quot;,&quot;scriptpubkey_type&quot;:&quot;v0_p2wpkh&quot;,&quot;scriptpubkey_address&quot;:&quot;bc1qzhcd446gq6crvyngwqudfad6kgq2lnuw9r2a86&quot;,&quot;value&quot;:470675},&quot;scriptsig&quot;:&quot;&quot;,&quot;scriptsig_asm&quot;:&quot;&quot;,&quot;witness&quot;:[&quot;3045022100f30d84532f96b5e489047174e81394883cd519d427ca8f4facc2366f718cc678022007c083634402f40708c645cd0c1a2757b56de2076ca6ee856e514859381cd93801&quot;,&quot;02942b44eb4289e3af0aeeb73dfa82b0a5c8a3a06ae85bfd22aa3dcfcd64096462&quot;],&quot;is_coinbase&quot;:false,&quot;sequence&quot;:0},{&quot;txid&quot;:&quot;c62da0c2d1929ab2a2c04d4fbae2a6e4e947f867cba584d1f80c4a1a62f4a75f&quot;,&quot;vout&quot;:1,&quot;prevout&quot;:{&quot;scriptpubkey&quot;:&quot;0014f0c1d6b471d5e4a483fc146d4220a4e81587bf11&quot;,&quot;scriptpubkey_asm&quot;:&quot;OP_0 OP_PUSHBYTES_20 f0c1d6b471d5e4a483fc146d4220a4e81587bf11&quot;,&quot;scriptpubkey_type&quot;:&quot;v0_p2wpkh&quot;,&quot;scriptpubkey_address&quot;:&quot;bc1q7rqaddr36hj2fqluz3k5yg9yaq2c00c3tw4qy5&quot;,&quot;value&quot;:899778},&quot;scriptsig&quot;:&quot;&quot;,&quot;scriptsig_asm&quot;:&quot;&quot;,&quot;witness&quot;:[&quot;304402202da0eac25786003181526c4fe1592f982aa8d0f32c642a5103cdebbf4aa8b5a80220750cd6859bfb9a7df8d7c4d79a70e17a6df87f150fe1fdaade4650332ef0f47c01&quot;,&quot;02ecab80fcfe949633064c25fc33854fd09b8730decdf679db1f429bce201ec685&quot;],&quot;is_coinbase&quot;:false,&quot;sequence&quot;:0}],&quot;vout&quot;:[{&quot;scriptpubkey&quot;:&quot;001465c96c830168b8f0b584294d3b9716bb8584c2d8&quot;,&quot;scriptpubkey_asm&quot;:&quot;OP_0 OP_PUSHBYTES_20 65c96c830168b8f0b584294d3b9716bb8584c2d8&quot;,&quot;scriptpubkey_type&quot;:&quot;v0_p2wpkh&quot;,&quot;scriptpubkey_address&quot;:&quot;bc1qvhykeqcpdzu0pdvy99xnh9ckhwzcfskct6h6l2&quot;,&quot;value&quot;:263216},{&quot;scriptpubkey&quot;:&quot;00200cea60ae9eea43e64b17ba65a4c17bd3acf9dac307825deda85d5a093181dbc0&quot;,&quot;scriptpubkey_asm&quot;:&quot;OP_0 OP_PUSHBYTES_32 0cea60ae9eea43e64b17ba65a4c17bd3acf9dac307825deda85d5a093181dbc0&quot;,&quot;scriptpubkey_type&quot;:&quot;v0_p2wsh&quot;,&quot;scriptpubkey_address&quot;:&quot;bc1qpn4xpt57afp7vjchhfj6fstm6wk0nkkrq7p9mmdgt4dqjvvpm0qqlxqrns&quot;,&quot;value&quot;:1088924}],&quot;size&quot;:383,&quot;weight&quot;:881,&quot;fee&quot;:18313,&quot;status&quot;:{&quot;confirmed&quot;:true,&quot;block_height&quot;:674357,&quot;block_hash&quot;:&quot;00000000000000000008d0d007995a8bc9d60de17bd6b55e28a6e4c6918cb206&quot;,&quot;block_time&quot;:1615594996}}]&quot;#</span>).unwrap();
+        <span class="kw">let </span>utxos = get_utxos(swap_address.clone(), txs).unwrap();
+        <span class="macro">assert_eq!</span>(utxos.len(), <span class="number">0</span>);
+
+        <span class="kw">let </span>swap_address = String::from(<span class="string">&quot;35kRn3rF7oDFU1BFRHuQM9txBWBXqipoJ3&quot;</span>);
+        <span class="kw">let </span>txs: Vec&lt;OnchainTx&gt; = serde_json::from_str(<span class="string">r#&quot;[{&quot;txid&quot;:&quot;9f13dd16167430c2ccb3b89b5f915a3c836722c486e30505791c9604f1017a99&quot;,&quot;version&quot;:1,&quot;locktime&quot;:0,&quot;vin&quot;:[{&quot;txid&quot;:&quot;3d8e3b3e7ad5a396902f8814a5446139dd55757c6f3fa5fc63e905f1fef00a10&quot;,&quot;vout&quot;:66,&quot;prevout&quot;:{&quot;scriptpubkey&quot;:&quot;a914b0f4345fad758790048c03d46fccf66b852ec9e387&quot;,&quot;scriptpubkey_asm&quot;:&quot;OP_HASH160 OP_PUSHBYTES_20 b0f4345fad758790048c03d46fccf66b852ec9e3 OP_EQUAL&quot;,&quot;scriptpubkey_type&quot;:&quot;p2sh&quot;,&quot;scriptpubkey_address&quot;:&quot;3HpfPwMTCggpmwMNxebnJB6y8jJP8Y3mdM&quot;,&quot;value&quot;:8832100},&quot;scriptsig&quot;:&quot;160014716588545d5a9ddcc2e38802d7382b8fc37e90ba&quot;,&quot;scriptsig_asm&quot;:&quot;OP_PUSHBYTES_22 0014716588545d5a9ddcc2e38802d7382b8fc37e90ba&quot;,&quot;witness&quot;:[&quot;30450221008d73700314bd2de9e56256ce0548fe08f220f5c928075a242ca9a7980b0e7f5602202701318e9a6c3ba128dcf915c6c3997928e9870d4023150e6bfb84a783617a1c01&quot;,&quot;025dddb140932a1247c1cdc2dec534ba2a7647bb03c989a88e6d18117517f388f3&quot;],&quot;is_coinbase&quot;:false,&quot;sequence&quot;:4294967293,&quot;inner_redeemscript_asm&quot;:&quot;OP_0 OP_PUSHBYTES_20 716588545d5a9ddcc2e38802d7382b8fc37e90ba&quot;},{&quot;txid&quot;:&quot;9e64ea8118b13871d02d941552fa42af6d079e4e9384aa71a7da747d52cb468b&quot;,&quot;vout&quot;:0,&quot;prevout&quot;:{&quot;scriptpubkey&quot;:&quot;a914b7969fec4adfad203881f98b6c04dfeeff774f5487&quot;,&quot;scriptpubkey_asm&quot;:&quot;OP_HASH160 OP_PUSHBYTES_20 b7969fec4adfad203881f98b6c04dfeeff774f54 OP_EQUAL&quot;,&quot;scriptpubkey_type&quot;:&quot;p2sh&quot;,&quot;scriptpubkey_address&quot;:&quot;3JRk2EfAr1mjYmXSMf5heBRnA6ym7WFsX1&quot;,&quot;value&quot;:23093207},&quot;scriptsig&quot;:&quot;160014d7f0a22aab7bd11dcb977e43f06ecfd6c44b7c2d&quot;,&quot;scriptsig_asm&quot;:&quot;OP_PUSHBYTES_22 0014d7f0a22aab7bd11dcb977e43f06ecfd6c44b7c2d&quot;,&quot;witness&quot;:[&quot;30440220368b9584a2837542b600bbce16293811b01d0c5f919d153eb0d6c6716c4357000220379b6f91cb24c3d8193e39acaed2dbb973084bff10aff48059a1086672c5cde401&quot;,&quot;02074b5af43b526fedea5527edf1d246d1821867f161ebd9ca26295e21aeddb30a&quot;],&quot;is_coinbase&quot;:false,&quot;sequence&quot;:4294967293,&quot;inner_redeemscript_asm&quot;:&quot;OP_0 OP_PUSHBYTES_20 d7f0a22aab7bd11dcb977e43f06ecfd6c44b7c2d&quot;}],&quot;vout&quot;:[{&quot;scriptpubkey&quot;:&quot;a9142c85a9b818d3cdf89bd3a1057bb21b2c7e64ad6087&quot;,&quot;scriptpubkey_asm&quot;:&quot;OP_HASH160 OP_PUSHBYTES_20 2c85a9b818d3cdf89bd3a1057bb21b2c7e64ad60 OP_EQUAL&quot;,&quot;scriptpubkey_type&quot;:&quot;p2sh&quot;,&quot;scriptpubkey_address&quot;:&quot;35kRn3rF7oDFU1BFRHuQM9txBWBXqipoJ3&quot;,&quot;value&quot;:31461100}],&quot;size&quot;:387,&quot;weight&quot;:897,&quot;fee&quot;:464207,&quot;status&quot;:{&quot;confirmed&quot;:true,&quot;block_height&quot;:764153,&quot;block_hash&quot;:&quot;00000000000000000000199349a95526c4f83959f0ef06697048a297f25e7fac&quot;,&quot;block_time&quot;:1669044812}}]&quot;#</span>).unwrap();
+        <span class="kw">let </span>utxos = get_utxos(swap_address.clone(), txs).unwrap();
+        <span class="macro">assert_eq!</span>(utxos.len(), <span class="number">1</span>);
+    }
+
+    <span class="comment">// 1. User has sent funds to swap address
+    // 2. Swap didn&#39;t complete before timeout
+    // Swap should move to Expired status and returned in the refundable list.
+    </span><span class="attribute">#[tokio::test]
+    </span><span class="kw">async fn </span>test_expired_swap() {
+        <span class="kw">let </span>chain_service = Arc::new(MockChainService::default());
+        <span class="kw">let </span>(<span class="kw-2">mut </span>swapper, <span class="kw">_</span>) = create_swapper(chain_service.clone());
+        <span class="kw">let </span>swap_info = swapper.create_swap_address().<span class="kw">await</span>.unwrap();
+
+        <span class="comment">// We test the case that a confirmed transaction was detected on chain that
+        // sent funds to this address but the lock timeout has expired.
+        </span>swapper.chain_service = chain_service_with_confirmed_txs(swap_info.clone().bitcoin_address);
+        swapper
+            .on_event(BreezEvent::NewBlock {
+                block: chain_service.tip + <span class="number">145</span>,
+            })
+            .<span class="kw">await
+            </span>.unwrap();
+
+        <span class="kw">let </span>swap = swapper
+            .get_swap_info(swap_info.clone().bitcoin_address)
+            .unwrap()
+            .unwrap();
+        <span class="macro">assert_eq!</span>(swap.refund_tx_ids, Vec::&lt;String&gt;::new());
+        <span class="macro">assert_eq!</span>(
+            swap.confirmed_tx_ids,
+            <span class="macro">vec!</span>[<span class="string">&quot;ec901bcab07df7d475d98fff2933dcb56d57bbdaa029c4142aed93462b6928fe&quot;</span>.to_string()]
+        );
+
+        <span class="macro">assert_eq!</span>(swap.confirmed_sats, <span class="number">50000</span>);
+        <span class="macro">assert_eq!</span>(swap.paid_sats, <span class="number">0</span>);
+        <span class="macro">assert_eq!</span>(swap.status, SwapStatus::Expired);
+        <span class="macro">assert_eq!</span>(swapper.list_redeemables().unwrap().len(), <span class="number">0</span>);
+        <span class="macro">assert_eq!</span>(swapper.list_refundables().unwrap().len(), <span class="number">1</span>);
+
+        <span class="comment">// broadcast refund transaction
+        </span><span class="kw">let </span>address = swapper
+            .refund_swap(
+                swap.bitcoin_address,
+                String::from(<span class="string">&quot;34RQERthXaruAXtW6q1bvrGTeUbqi2Sm1i&quot;</span>),
+                <span class="number">1</span>,
+            )
+            .<span class="kw">await
+            </span>.unwrap();
+        <span class="kw">let </span>swap = swapper
+            .get_swap_info(swap_info.clone().bitcoin_address)
+            .unwrap()
+            .unwrap();
+        <span class="macro">assert_eq!</span>(swap.status, SwapStatus::Expired);
+        <span class="macro">assert_eq!</span>(swapper.list_redeemables().unwrap().len(), <span class="number">0</span>);
+
+        <span class="comment">// the swap should be refundable by now
+        </span><span class="kw">let </span>refundables = swapper.list_refundables().unwrap();
+        <span class="macro">assert_eq!</span>(refundables.len(), <span class="number">1</span>);
+        <span class="macro">assert_eq!</span>(refundables[<span class="number">0</span>].clone().refund_tx_ids.len(), <span class="number">1</span>);
+        <span class="macro">assert_eq!</span>(refundables[<span class="number">0</span>].clone().refund_tx_ids[<span class="number">0</span>], address);
+    }
+
+    <span class="comment">// 1. User sent funds to swap address
+    // 2. Funds are redeemed in lightning transaction
+    // Swap paid amount is updated and no longer redeemable.
+    </span><span class="attribute">#[tokio::test]
+    </span><span class="kw">async fn </span>test_redeem_swap() {
+        <span class="kw">let </span>chain_service = Arc::new(MockChainService::default());
+        <span class="kw">let </span>(<span class="kw-2">mut </span>swapper, persister) = create_swapper(chain_service.clone());
+        <span class="kw">let </span>swap_info = swapper.create_swap_address().<span class="kw">await</span>.unwrap();
+
+        <span class="comment">// add a payment with the same hash and test that the swapper updates the paid_amount for
+        // the swap.
+        </span><span class="kw">let </span>payment = Payment {
+            id: hex::encode(swap_info.payment_hash.clone()),
+            payment_type: PaymentType::Received,
+            payment_time: <span class="number">0</span>,
+            amount_msat: <span class="number">5000 </span><span class="kw">as </span>i64,
+            fee_msat: <span class="number">0</span>,
+            pending: <span class="bool-val">false</span>,
+            description: <span class="prelude-val">Some</span>(<span class="string">&quot;desc&quot;</span>.to_string()),
+            details: PaymentDetails::Ln {
+                data: LnPaymentDetails {
+                    payment_hash: hex::encode(swap_info.payment_hash.clone()),
+                    label: <span class="string">&quot;&quot;</span>.to_string(),
+                    destination_pubkey: <span class="string">&quot;&quot;</span>.to_string(),
+                    payment_preimage: <span class="string">&quot;111&quot;</span>.to_string(),
+                    keysend: <span class="bool-val">false</span>,
+                    bolt11: <span class="string">&quot;&quot;</span>.to_string(),
+                },
+            },
+        };
+        persister.insert_payments(<span class="kw-2">&amp;</span><span class="macro">vec!</span>[payment.clone()]).unwrap();
+
+        <span class="comment">// We test the case that a confirmed transaction was detected on chain that
+        // sent funds to this address.
+        </span>swapper.chain_service = chain_service_with_confirmed_txs(swap_info.clone().bitcoin_address);
+        swapper
+            .on_event(BreezEvent::NewBlock {
+                block: chain_service.tip + <span class="number">1</span>,
+            })
+            .<span class="kw">await
+            </span>.unwrap();
+
+        <span class="kw">let </span>swap = swapper
+            .get_swap_info(swap_info.clone().bitcoin_address)
+            .unwrap()
+            .unwrap();
+        <span class="macro">assert_eq!</span>(swap.refund_tx_ids, Vec::&lt;String&gt;::new());
+        <span class="macro">assert_eq!</span>(
+            swap.confirmed_tx_ids,
+            <span class="macro">vec!</span>[<span class="string">&quot;ec901bcab07df7d475d98fff2933dcb56d57bbdaa029c4142aed93462b6928fe&quot;</span>.to_string()]
+        );
+
+        <span class="macro">assert_eq!</span>(swap.confirmed_sats, <span class="number">50000</span>);
+        <span class="macro">assert_eq!</span>(swap.paid_sats, <span class="number">5000</span>);
+
+        <span class="macro">assert_eq!</span>(swapper.list_redeemables().unwrap().len(), <span class="number">0</span>);
+        <span class="macro">assert_eq!</span>(swapper.list_refundables().unwrap().len(), <span class="number">0</span>);
+
+        <span class="comment">// change payment amout and test that the InvoicePaid event triggers updating the
+        // paid_amount of the swap.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>payment = payment.clone();
+        payment.amount_msat = <span class="number">2000</span>;
+        persister.insert_payments(<span class="kw-2">&amp;</span><span class="macro">vec!</span>[payment]).unwrap();
+        swapper
+            .on_event(BreezEvent::InvoicePaid {
+                details: <span class="kw">crate</span>::InvoicePaidDetails {
+                    payment_hash: hex::encode(swap_info.payment_hash.clone()),
+                    bolt11: <span class="string">&quot;&quot;</span>.to_string(),
+                },
+            })
+            .<span class="kw">await
+            </span>.unwrap();
+        <span class="kw">let </span>swap = swapper
+            .get_swap_info(swap_info.clone().bitcoin_address)
+            .unwrap()
+            .unwrap();
+        <span class="macro">assert_eq!</span>(swap.paid_sats, <span class="number">2000</span>);
+    }
+
+    <span class="comment">// 1. User sent funds to swap address
+    // 2. Funds are redeemed in lightning transaction
+    // Swap paid amount is updated and no longer redeemable.
+    </span><span class="attribute">#[tokio::test]
+    </span><span class="kw">async fn </span>test_spent_swap() {
+        <span class="kw">let </span>chain_service = Arc::new(MockChainService::default());
+        <span class="kw">let </span>(<span class="kw-2">mut </span>swapper, <span class="kw">_</span>) = create_swapper(chain_service.clone());
+        <span class="kw">let </span>swap_info = swapper.create_swap_address().<span class="kw">await</span>.unwrap();
+
+        <span class="comment">// Once swap is spent on-chain the confirmed_sats whould be set to zero again.
+        </span>swapper.chain_service = chain_service_after_spent(swap_info.clone().bitcoin_address);
+        swapper
+            .on_event(BreezEvent::NewBlock {
+                block: chain_service.tip + <span class="number">1</span>,
+            })
+            .<span class="kw">await
+            </span>.unwrap();
+
+        <span class="kw">let </span>swap = swapper
+            .get_swap_info(swap_info.clone().bitcoin_address)
+            .unwrap()
+            .unwrap();
+        <span class="macro">assert_eq!</span>(swap.refund_tx_ids, Vec::&lt;String&gt;::new());
+        <span class="macro">assert_eq!</span>(swap.confirmed_tx_ids, Vec::&lt;String&gt;::new());
+        <span class="macro">assert_eq!</span>(swap.confirmed_sats, <span class="number">0</span>);
+        <span class="macro">assert_eq!</span>(swapper.list_redeemables().unwrap().len(), <span class="number">0</span>);
+        <span class="macro">assert_eq!</span>(swapper.list_refundables().unwrap().len(), <span class="number">0</span>);
+
+        <span class="comment">// timeout expired
+        </span>swapper
+            .on_event(BreezEvent::NewBlock {
+                block: chain_service.tip + <span class="number">145</span>,
+            })
+            .<span class="kw">await
+            </span>.unwrap();
+
+        <span class="kw">let </span>swap = swapper
+            .get_swap_info(swap_info.clone().bitcoin_address)
+            .unwrap()
+            .unwrap();
+
+        <span class="macro">assert_eq!</span>(swap.status, SwapStatus::Expired);
+        <span class="macro">assert_eq!</span>(swapper.list_redeemables().unwrap().len(), <span class="number">0</span>);
+        <span class="macro">assert_eq!</span>(swapper.list_refundables().unwrap().len(), <span class="number">0</span>);
+    }
+
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_refund() {
+        <span class="comment">// test parameters
+        </span><span class="kw">let </span>payer_priv_key_raw = [<span class="number">1</span>; <span class="number">32</span>].to_vec();
+        <span class="kw">let </span>swapper_priv_key_raw = [<span class="number">2</span>; <span class="number">32</span>].to_vec();
+        <span class="kw">let </span>preimage: [u8; <span class="number">32</span>] = [<span class="number">3</span>; <span class="number">32</span>];
+        <span class="kw">let </span>to_address = String::from(<span class="string">&quot;bc1qvhykeqcpdzu0pdvy99xnh9ckhwzcfskct6h6l2&quot;</span>);
+        <span class="kw">let </span>lock_time = <span class="number">288</span>;
+
+        <span class="kw">let </span>utxos: Vec&lt;Utxo&gt; = <span class="macro">vec!</span>[Utxo {
+            out: OutPoint {
+                txid: Txid::from_hex(
+                    <span class="string">&quot;1ab3fe9f94ff1332d6f198484c3677832d1162781f86ce85f6d7587fa97f0330&quot;</span>,
+                )
+                .unwrap(),
+                vout: <span class="number">0</span>,
+            },
+            value: <span class="number">20000</span>,
+            block_height: <span class="number">700000</span>,
+        }];
+
+        <span class="comment">// payer keys
+        </span><span class="kw">let </span>secp = Secp256k1::new();
+        <span class="kw">let </span>payer_private_key = SecretKey::from_slice(<span class="kw-2">&amp;</span>payer_priv_key_raw).unwrap();
+        <span class="kw">let </span>payer_pub_key = PublicKey::from_secret_key(<span class="kw-2">&amp;</span>secp, <span class="kw-2">&amp;</span>payer_private_key)
+            .serialize()
+            .to_vec();
+
+        <span class="comment">// swapper keys
+        </span><span class="kw">let </span>swapper_private_key = SecretKey::from_slice(<span class="kw-2">&amp;</span>swapper_priv_key_raw).unwrap();
+        <span class="kw">let </span>swapper_pub_key = PublicKey::from_secret_key(<span class="kw-2">&amp;</span>secp, <span class="kw-2">&amp;</span>swapper_private_key)
+            .serialize()
+            .to_vec();
+
+        <span class="comment">// calculate payment hash
+        </span><span class="kw">let </span>payment_hash = Message::from_hashed_data::&lt;sha256::Hash&gt;(<span class="kw-2">&amp;</span>preimage.clone()[..])
+            .as_ref()
+            .to_vec();
+
+        <span class="kw">let </span>script =
+            create_submarine_swap_script(payment_hash, swapper_pub_key, payer_pub_key, lock_time)
+                .unwrap();
+
+        <span class="kw">let </span>refund_tx = create_refund_tx(
+            utxos,
+            payer_priv_key_raw,
+            to_address,
+            lock_time <span class="kw">as </span>u32,
+            script,
+            <span class="number">0</span>,
+        )
+        .unwrap();
+
+        <span class="comment">/*  We test that the refund transaction looks like this
+           {
+            &quot;addresses&quot;: [
+                &quot;bc1qvhykeqcpdzu0pdvy99xnh9ckhwzcfskct6h6l2&quot;
+            ],
+            &quot;block_height&quot;: -1,
+            &quot;block_index&quot;: -1,
+            &quot;confirmations&quot;: 0,
+            &quot;double_spend&quot;: false,
+            &quot;fees&quot;: 0,
+            &quot;hash&quot;: &quot;3f9cf5bef98a0ed82c0ef8e4bd34e3624bbedf60b4cbaae3b1180569d562f2fb&quot;,
+            &quot;inputs&quot;: [
+                {
+                    &quot;age&quot;: 0,
+                    &quot;output_index&quot;: 0,
+                    &quot;prev_hash&quot;: &quot;1ab3fe9f94ff1332d6f198484c3677832d1162781f86ce85f6d7587fa97f0330&quot;,
+                    &quot;script_type&quot;: &quot;empty&quot;,
+                    &quot;sequence&quot;: 288
+                }
+            ],
+            &quot;lock_time&quot;: 700288,
+            &quot;opt_in_rbf&quot;: true,
+            &quot;outputs&quot;: [
+                {
+                    &quot;addresses&quot;: [
+                        &quot;bc1qvhykeqcpdzu0pdvy99xnh9ckhwzcfskct6h6l2&quot;
+                    ],
+                    &quot;script&quot;: &quot;001465c96c830168b8f0b584294d3b9716bb8584c2d8&quot;,
+                    &quot;script_type&quot;: &quot;pay-to-witness-pubkey-hash&quot;,
+                    &quot;value&quot;: 20000
+                }
+            ],
+            &quot;preference&quot;: &quot;low&quot;,
+            &quot;received&quot;: &quot;2022-11-16T10:24:20.100655728Z&quot;,
+            &quot;relayed_by&quot;: &quot;3.235.183.11&quot;,
+            &quot;size&quot;: 157,
+            &quot;total&quot;: 20000,
+            &quot;ver&quot;: 2,
+            &quot;vin_sz&quot;: 1,
+            &quot;vout_sz&quot;: 1,
+            &quot;vsize&quot;: 101
+        }
+        */
+        </span><span class="macro">assert_eq!</span>(hex::encode(refund_tx), <span class="string">&quot;0200000000010130037fa97f58d7f685ce861f7862112d8377364c4898f1d63213ff949ffeb31a00000000002001000001204e00000000000016001465c96c830168b8f0b584294d3b9716bb8584c2d80347304402203285efcf44640551a56c53bde677988964ef1b4d11182d5d6634096042c320120220227b625f7827993aca5b9d2f4690c5e5fae44d8d42fdd5f3778ba21df8ba7c7b010064a9148a486ff2e31d6158bf39e2608864d63fefd09d5b876321024d4b6cd1361032ca9bd2aeb9d900aa4d45d9ead80ac9423374c451a7254d076667022001b27521031b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f68ac80af0a00&quot;</span>);
+    }
+
+    <span class="kw">fn </span>create_swapper(
+        chain_service: Arc&lt;<span class="kw">dyn </span>ChainService&gt;,
+    ) -&gt; (BTCReceiveSwap, Arc&lt;SqliteStorage&gt;) {
+        <span class="kw">let </span>config = create_test_config();
+        <span class="macro">println!</span>(<span class="string">&quot;working = {}&quot;</span>, config.working_dir);
+
+        <span class="kw">let </span>persister = Arc::new(create_test_persister(config.clone()));
+        persister.init().unwrap();
+
+        <span class="kw">let </span>dummy_node_state = get_dummy_node_state();
+        persister.set_node_state(<span class="kw-2">&amp;</span>dummy_node_state).unwrap();
+
+        <span class="kw">let </span>swapper = BTCReceiveSwap {
+            network: bitcoin::Network::Bitcoin,
+            swapper_api: Arc::new(MockSwapperAPI {}),
+            persister: persister.clone(),
+            chain_service: chain_service.clone(),
+            payment_receiver: Arc::new(MockReceiver::default()),
+        };
+        (swapper, persister.clone())
+    }
+
+    <span class="kw">fn </span>chain_service_with_confirmed_txs(address: String) -&gt; Arc&lt;<span class="kw">dyn </span>ChainService&gt; {
+        <span class="kw">let </span>confirmed_txs_raw = <span class="string">r#&quot;[{&quot;txid&quot;:&quot;ec901bcab07df7d475d98fff2933dcb56d57bbdaa029c4142aed93462b6928fe&quot;,&quot;version&quot;:1,&quot;locktime&quot;:767636,&quot;vin&quot;:[{&quot;txid&quot;:&quot;d4344fc9e7f66b3a1a50d1d76836a157629ba0c6ede093e94f1c809d334c9146&quot;,&quot;vout&quot;:0,&quot;prevout&quot;:{&quot;scriptpubkey&quot;:&quot;0014cab22290b7adc75f861de820baa97d319c1110a6&quot;,&quot;scriptpubkey_asm&quot;:&quot;OP_0 OP_PUSHBYTES_20 cab22290b7adc75f861de820baa97d319c1110a6&quot;,&quot;scriptpubkey_type&quot;:&quot;v0_p2wpkh&quot;,&quot;scriptpubkey_address&quot;:&quot;bc1qe2ez9y9h4hr4lpsaaqst42taxxwpzy9xlzqt8k&quot;,&quot;value&quot;:209639471},&quot;scriptsig&quot;:&quot;&quot;,&quot;scriptsig_asm&quot;:&quot;&quot;,&quot;witness&quot;:[&quot;304402202e914c35b75da798f0898c7cfe6ead207aaee41219afd77124fd56971f05d9030220123ce5d124f4635171b7622995dae35e00373a5fbf8117bfdca5e5080ad6554101&quot;,&quot;02122fa6d20413bb5da5c7e3fb42228be5436b1bd84e29b294bfc200db5eac460e&quot;],&quot;is_coinbase&quot;:false,&quot;sequence&quot;:4294967293}],&quot;vout&quot;:[{&quot;scriptpubkey&quot;:&quot;0014b34b7da80e662d1db3fcfbe34b7f4cacc4fac34d&quot;,&quot;scriptpubkey_asm&quot;:&quot;OP_0 OP_PUSHBYTES_20 b34b7da80e662d1db3fcfbe34b7f4cacc4fac34d&quot;,&quot;scriptpubkey_type&quot;:&quot;v0_p2wpkh&quot;,&quot;scriptpubkey_address&quot;:&quot;bc1qkd9hm2qwvck3mvlul035kl6v4nz04s6dmryeq5&quot;,&quot;value&quot;:50000},{&quot;scriptpubkey&quot;:&quot;0014f0e2a057d0e60411ac3d7218e29bf9489a59df18&quot;,&quot;scriptpubkey_asm&quot;:&quot;OP_0 OP_PUSHBYTES_20 f0e2a057d0e60411ac3d7218e29bf9489a59df18&quot;,&quot;scriptpubkey_type&quot;:&quot;v0_p2wpkh&quot;,&quot;scriptpubkey_address&quot;:&quot;bc1q7r32q47suczprtpawgvw9xlefzd9nhccyatxvu&quot;,&quot;value&quot;:12140465}],&quot;size&quot;:222,&quot;weight&quot;:561,&quot;fee&quot;:1753,&quot;status&quot;:{&quot;confirmed&quot;:true,&quot;block_height&quot;:767637,&quot;block_hash&quot;:&quot;000000000000000000077769f3b2e6a28b9ed688f0d773f9ff2d73c622a2cfac&quot;,&quot;block_time&quot;:1671174562}}]&quot;#</span>;
+        <span class="kw">let </span>confirmed_txs = confirmed_txs_raw.replace(
+            <span class="string">&quot;bc1qkd9hm2qwvck3mvlul035kl6v4nz04s6dmryeq5&quot;</span>,
+            address.as_str(),
+        );
+        chain_service_with_transactions(address, confirmed_txs)
+    }
+
+    <span class="kw">fn </span>chain_service_after_spent(address: String) -&gt; Arc&lt;<span class="kw">dyn </span>ChainService&gt; {
+        <span class="kw">let </span>txs_raw = <span class="string">r#&quot;[{&quot;txid&quot;:&quot;a418e856bb22b6345868dc0b1ac1dd7a6b7fae1d231b275b74172f9584fa0bdf&quot;,&quot;version&quot;:1,&quot;locktime&quot;:0,&quot;vin&quot;:[{&quot;txid&quot;:&quot;ec901bcab07df7d475d98fff2933dcb56d57bbdaa029c4142aed93462b6928fe&quot;,&quot;vout&quot;:0,&quot;prevout&quot;:{&quot;scriptpubkey&quot;:&quot;0014b34b7da80e662d1db3fcfbe34b7f4cacc4fac34d&quot;,&quot;scriptpubkey_asm&quot;:&quot;OP_0 OP_PUSHBYTES_20 b34b7da80e662d1db3fcfbe34b7f4cacc4fac34d&quot;,&quot;scriptpubkey_type&quot;:&quot;v0_p2wpkh&quot;,&quot;scriptpubkey_address&quot;:&quot;bc1qkd9hm2qwvck3mvlul035kl6v4nz04s6dmryeq5&quot;,&quot;value&quot;:50000},&quot;scriptsig&quot;:&quot;&quot;,&quot;scriptsig_asm&quot;:&quot;&quot;,&quot;witness&quot;:[&quot;304502210089933e46614114e060d3d681c54af71e3d47f8be8131d9310ef8fe231c060f3302204103910a6790e3a678964df6f0f9ae2107666a91e777bd87f9172a28653e374701&quot;,&quot;0356f385879fefb8c52758126f6e7b9ac57374c2f73f2ee9047b4c61df0ba390b9&quot;],&quot;is_coinbase&quot;:false,&quot;sequence&quot;:4294967293},{&quot;txid&quot;:&quot;fda3ce37f5fb849502e2027958d51efebd1841cb43bbfdd5f3d354c93a551ef9&quot;,&quot;vout&quot;:0,&quot;prevout&quot;:{&quot;scriptpubkey&quot;:&quot;00145c7f3b6ceb79d03d5a5397df83f2334394ebdd2c&quot;,&quot;scriptpubkey_asm&quot;:&quot;OP_0 OP_PUSHBYTES_20 5c7f3b6ceb79d03d5a5397df83f2334394ebdd2c&quot;,&quot;scriptpubkey_type&quot;:&quot;v0_p2wpkh&quot;,&quot;scriptpubkey_address&quot;:&quot;bc1qt3lnkm8t08gr6kjnjl0c8u3ngw2whhfvzwsxrg&quot;,&quot;value&quot;:786885},&quot;scriptsig&quot;:&quot;&quot;,&quot;scriptsig_asm&quot;:&quot;&quot;,&quot;witness&quot;:[&quot;304402200ae5465efe824609f7faf1094cce0195763df52e5409dd9ae0526568bf3bcaa20220103749041a87e082cf95bf1e12c5174881e5e4c55e75ab2db29a68538dbabbad01&quot;,&quot;03dfd8cc1f72f46d259dc0afc6d756bce551fce2fbf58a9ad36409a1b82a17e64f&quot;],&quot;is_coinbase&quot;:false,&quot;sequence&quot;:4294967293}],&quot;vout&quot;:[{&quot;scriptpubkey&quot;:&quot;a9141df45814863edfd6d87457e8f8bd79607a116a8f87&quot;,&quot;scriptpubkey_asm&quot;:&quot;OP_HASH160 OP_PUSHBYTES_20 1df45814863edfd6d87457e8f8bd79607a116a8f OP_EQUAL&quot;,&quot;scriptpubkey_type&quot;:&quot;p2sh&quot;,&quot;scriptpubkey_address&quot;:&quot;34RQERthXaruAXtW6q1bvrGTeUbqi2Sm1i&quot;,&quot;value&quot;:26087585},{&quot;scriptpubkey&quot;:&quot;001479001aa5f4b981a0b654c3f834d0573595b0ed53&quot;,&quot;scriptpubkey_asm&quot;:&quot;OP_0 OP_PUSHBYTES_20 79001aa5f4b981a0b654c3f834d0573595b0ed53&quot;,&quot;scriptpubkey_type&quot;:&quot;v0_p2wpkh&quot;,&quot;scriptpubkey_address&quot;:&quot;bc1q0yqp4f05hxq6pdj5c0urf5zhxk2mpm2ndx85za&quot;,&quot;value&quot;:171937413}],&quot;size&quot;:372,&quot;weight&quot;:837,&quot;fee&quot;:259140,&quot;status&quot;:{&quot;confirmed&quot;:true,&quot;block_height&quot;:767637,&quot;block_hash&quot;:&quot;000000000000000000077769f3b2e6a28b9ed688f0d773f9ff2d73c622a2cfac&quot;,&quot;block_time&quot;:1671174562}},{&quot;txid&quot;:&quot;ec901bcab07df7d475d98fff2933dcb56d57bbdaa029c4142aed93462b6928fe&quot;,&quot;version&quot;:1,&quot;locktime&quot;:767636,&quot;vin&quot;:[{&quot;txid&quot;:&quot;d4344fc9e7f66b3a1a50d1d76836a157629ba0c6ede093e94f1c809d334c9146&quot;,&quot;vout&quot;:0,&quot;prevout&quot;:{&quot;scriptpubkey&quot;:&quot;0014cab22290b7adc75f861de820baa97d319c1110a6&quot;,&quot;scriptpubkey_asm&quot;:&quot;OP_0 OP_PUSHBYTES_20 cab22290b7adc75f861de820baa97d319c1110a6&quot;,&quot;scriptpubkey_type&quot;:&quot;v0_p2wpkh&quot;,&quot;scriptpubkey_address&quot;:&quot;bc1qe2ez9y9h4hr4lpsaaqst42taxxwpzy9xlzqt8k&quot;,&quot;value&quot;:209639471},&quot;scriptsig&quot;:&quot;&quot;,&quot;scriptsig_asm&quot;:&quot;&quot;,&quot;witness&quot;:[&quot;304402202e914c35b75da798f0898c7cfe6ead207aaee41219afd77124fd56971f05d9030220123ce5d124f4635171b7622995dae35e00373a5fbf8117bfdca5e5080ad6554101&quot;,&quot;02122fa6d20413bb5da5c7e3fb42228be5436b1bd84e29b294bfc200db5eac460e&quot;],&quot;is_coinbase&quot;:false,&quot;sequence&quot;:4294967293}],&quot;vout&quot;:[{&quot;scriptpubkey&quot;:&quot;0014b34b7da80e662d1db3fcfbe34b7f4cacc4fac34d&quot;,&quot;scriptpubkey_asm&quot;:&quot;OP_0 OP_PUSHBYTES_20 b34b7da80e662d1db3fcfbe34b7f4cacc4fac34d&quot;,&quot;scriptpubkey_type&quot;:&quot;v0_p2wpkh&quot;,&quot;scriptpubkey_address&quot;:&quot;bc1qkd9hm2qwvck3mvlul035kl6v4nz04s6dmryeq5&quot;,&quot;value&quot;:50000},{&quot;scriptpubkey&quot;:&quot;0014f0e2a057d0e60411ac3d7218e29bf9489a59df18&quot;,&quot;scriptpubkey_asm&quot;:&quot;OP_0 OP_PUSHBYTES_20 f0e2a057d0e60411ac3d7218e29bf9489a59df18&quot;,&quot;scriptpubkey_type&quot;:&quot;v0_p2wpkh&quot;,&quot;scriptpubkey_address&quot;:&quot;bc1q7r32q47suczprtpawgvw9xlefzd9nhccyatxvu&quot;,&quot;value&quot;:12140465}],&quot;size&quot;:222,&quot;weight&quot;:561,&quot;fee&quot;:1753,&quot;status&quot;:{&quot;confirmed&quot;:true,&quot;block_height&quot;:767637,&quot;block_hash&quot;:&quot;000000000000000000077769f3b2e6a28b9ed688f0d773f9ff2d73c622a2cfac&quot;,&quot;block_time&quot;:1671174562}}]&quot;#</span>;
+        <span class="kw">let </span>with_spent_txs = txs_raw.replace(
+            <span class="string">&quot;bc1qkd9hm2qwvck3mvlul035kl6v4nz04s6dmryeq5&quot;</span>,
+            address.as_str(),
+        );
+        chain_service_with_transactions(address, with_spent_txs)
+    }
+
+    <span class="kw">fn </span>chain_service_with_transactions(
+        address: String,
+        transactions: String,
+    ) -&gt; Arc&lt;<span class="kw">dyn </span>ChainService&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>chain_service = MockChainService::default();
+        <span class="kw">let </span>spent_txs_json: Vec&lt;OnchainTx&gt; = serde_json::from_str(<span class="kw-2">&amp;</span>transactions).unwrap();
+        chain_service.address_to_transactions.clear();
+        chain_service
+            .address_to_transactions
+            .insert(address.clone(), spent_txs_json);
+
+        Arc::new(chain_service)
+    }
+}
+</code></pre></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="breez_sdk_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0 (69f9c33d7 2022-12-12)" ></div></body></html>

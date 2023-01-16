@@ -1,0 +1,3 @@
+(function() {var implementors = {
+"breez_sdk_core":[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.66.0/core/default/trait.Default.html\" title=\"trait core::default::Default\">Default</a> for <a class=\"struct\" href=\"breez_sdk_core/struct.RouteHintHop.html\" title=\"struct breez_sdk_core::RouteHintHop\">RouteHintHop</a>"],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.66.0/core/default/trait.Default.html\" title=\"trait core::default::Default\">Default</a> for <a class=\"struct\" href=\"breez_sdk_core/struct.RouteHint.html\" title=\"struct breez_sdk_core::RouteHint\">RouteHint</a>"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

@@ -1,0 +1,414 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `sdk-core/src/invoice.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>invoice.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../breez_sdk_core/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
+<span id="2">2</span>
+<span id="3">3</span>
+<span id="4">4</span>
+<span id="5">5</span>
+<span id="6">6</span>
+<span id="7">7</span>
+<span id="8">8</span>
+<span id="9">9</span>
+<span id="10">10</span>
+<span id="11">11</span>
+<span id="12">12</span>
+<span id="13">13</span>
+<span id="14">14</span>
+<span id="15">15</span>
+<span id="16">16</span>
+<span id="17">17</span>
+<span id="18">18</span>
+<span id="19">19</span>
+<span id="20">20</span>
+<span id="21">21</span>
+<span id="22">22</span>
+<span id="23">23</span>
+<span id="24">24</span>
+<span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
+<span id="44">44</span>
+<span id="45">45</span>
+<span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
+<span id="50">50</span>
+<span id="51">51</span>
+<span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
+<span id="57">57</span>
+<span id="58">58</span>
+<span id="59">59</span>
+<span id="60">60</span>
+<span id="61">61</span>
+<span id="62">62</span>
+<span id="63">63</span>
+<span id="64">64</span>
+<span id="65">65</span>
+<span id="66">66</span>
+<span id="67">67</span>
+<span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
+<span id="71">71</span>
+<span id="72">72</span>
+<span id="73">73</span>
+<span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
+<span id="77">77</span>
+<span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
+<span id="86">86</span>
+<span id="87">87</span>
+<span id="88">88</span>
+<span id="89">89</span>
+<span id="90">90</span>
+<span id="91">91</span>
+<span id="92">92</span>
+<span id="93">93</span>
+<span id="94">94</span>
+<span id="95">95</span>
+<span id="96">96</span>
+<span id="97">97</span>
+<span id="98">98</span>
+<span id="99">99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+</pre><pre class="rust"><code><span class="kw">use </span>anyhow::{anyhow, <span class="prelude-ty">Result</span>};
+<span class="kw">use </span>bitcoin::secp256k1::PublicKey;
+<span class="kw">use </span>hex::ToHex;
+<span class="kw">use </span>lightning::routing::gossip::RoutingFees;
+<span class="kw">use </span>lightning::routing::<span class="kw-2">*</span>;
+<span class="kw">use </span>lightning_invoice::<span class="kw-2">*</span>;
+<span class="kw">use </span>std::str::FromStr;
+<span class="kw">use </span>std::time::UNIX_EPOCH;
+
+<span class="doccomment">/// Wrapper for a BOLT11 LN invoice
+</span><span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub struct </span>LNInvoice {
+    <span class="kw">pub </span>bolt11: String,
+    <span class="kw">pub </span>payee_pubkey: String,
+    <span class="kw">pub </span>payment_hash: String,
+    <span class="kw">pub </span>description: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    <span class="kw">pub </span>description_hash: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    <span class="kw">pub </span>amount_msat: <span class="prelude-ty">Option</span>&lt;u64&gt;,
+    <span class="kw">pub </span>timestamp: u64,
+    <span class="kw">pub </span>expiry: u64,
+    <span class="kw">pub </span>routing_hints: Vec&lt;RouteHint&gt;,
+    <span class="kw">pub </span>payment_secret: Vec&lt;u8&gt;,
+}
+
+<span class="doccomment">/// Details of a specific hop in a larger route hint
+</span><span class="attribute">#[derive(Default, Debug, PartialEq, Eq)]
+</span><span class="kw">pub struct </span>RouteHintHop {
+    <span class="doccomment">/// The node_id of the non-target end of the route
+    </span><span class="kw">pub </span>src_node_id: String,
+    <span class="doccomment">/// The short_channel_id of this channel
+    </span><span class="kw">pub </span>short_channel_id: u64,
+    <span class="doccomment">/// The fees which must be paid to use this channel
+    </span><span class="kw">pub </span>fees_base_msat: u32,
+    <span class="kw">pub </span>fees_proportional_millionths: u32,
+
+    <span class="doccomment">/// The difference in CLTV values between this node and the next node.
+    </span><span class="kw">pub </span>cltv_expiry_delta: u64,
+    <span class="doccomment">/// The minimum value, in msat, which must be relayed to the next hop.
+    </span><span class="kw">pub </span>htlc_minimum_msat: <span class="prelude-ty">Option</span>&lt;u64&gt;,
+    <span class="doccomment">/// The maximum value in msat available for routing with a single HTLC.
+    </span><span class="kw">pub </span>htlc_maximum_msat: <span class="prelude-ty">Option</span>&lt;u64&gt;,
+}
+
+<span class="doccomment">/// A route hint for a LN payment
+</span><span class="attribute">#[derive(Default, Debug, PartialEq, Eq)]
+</span><span class="kw">pub struct </span>RouteHint {
+    <span class="kw">pub </span>hops: Vec&lt;RouteHintHop&gt;,
+}
+
+<span class="kw">impl </span>RouteHint {
+    <span class="kw">pub fn </span>to_ldk_hint(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;router::RouteHint&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>hops = Vec::new();
+        <span class="kw">for </span>hop <span class="kw">in </span><span class="self">self</span>.hops.iter() {
+            <span class="kw">let </span>pubkey_res = PublicKey::from_str(<span class="kw-2">&amp;</span>hop.src_node_id)<span class="question-mark">?</span>;
+
+            <span class="kw">let </span>router_hop = router::RouteHintHop {
+                src_node_id: pubkey_res,
+                short_channel_id: hop.short_channel_id,
+                fees: RoutingFees {
+                    base_msat: hop.fees_base_msat,
+                    proportional_millionths: hop.fees_proportional_millionths,
+                },
+                cltv_expiry_delta: hop.cltv_expiry_delta <span class="kw">as </span>u16,
+                htlc_minimum_msat: hop.htlc_minimum_msat,
+                htlc_maximum_msat: hop.htlc_maximum_msat,
+            };
+            hops.push(router_hop);
+        }
+        <span class="prelude-val">Ok</span>(router::RouteHint(hops))
+    }
+
+    <span class="kw">pub fn </span>from_ldk_hint(hint: <span class="kw-2">&amp;</span>router::RouteHint) -&gt; RouteHint {
+        <span class="kw">let </span><span class="kw-2">mut </span>hops = Vec::new();
+        <span class="kw">for </span>hop <span class="kw">in </span>hint.<span class="number">0</span>.iter() {
+            <span class="kw">let </span>pubkey_res = hop.src_node_id.serialize().encode_hex::&lt;String&gt;();
+
+            <span class="kw">let </span>router_hop = RouteHintHop {
+                src_node_id: pubkey_res,
+                short_channel_id: hop.short_channel_id,
+                fees_base_msat: hop.fees.base_msat,
+                fees_proportional_millionths: hop.fees.proportional_millionths,
+                cltv_expiry_delta: u64::from(hop.cltv_expiry_delta),
+                htlc_minimum_msat: hop.htlc_minimum_msat,
+                htlc_maximum_msat: hop.htlc_maximum_msat,
+            };
+            hops.push(router_hop);
+        }
+        RouteHint { hops }
+    }
+}
+
+<span class="kw">pub fn </span>add_routing_hints(
+    invoice: String,
+    hints: Vec&lt;RouteHint&gt;,
+    new_amount_msats: u64,
+) -&gt; <span class="prelude-ty">Result</span>&lt;RawInvoice&gt; {
+    <span class="kw">let </span>signed = invoice.parse::&lt;SignedRawInvoice&gt;()<span class="question-mark">?</span>;
+    <span class="kw">let </span>invoice = Invoice::from_signed(signed)<span class="question-mark">?</span>;
+    <span class="kw">let </span>description = <span class="kw">match </span>invoice.description() {
+        InvoiceDescription::Direct(msg) =&gt; msg.to_string(),
+        InvoiceDescription::Hash(<span class="kw">_</span>) =&gt; String::from(<span class="string">&quot;&quot;</span>),
+    };
+
+    <span class="kw">let </span><span class="kw-2">mut </span>invoice_builder = InvoiceBuilder::new(Currency::Bitcoin)
+        .description(description)
+        .payment_hash(<span class="kw-2">*</span>invoice.payment_hash())
+        .timestamp(invoice.timestamp())
+        .amount_milli_satoshis(new_amount_msats)
+        .expiry_time(invoice.expiry_time())
+        .payment_secret(<span class="kw-2">*</span>invoice.payment_secret())
+        .min_final_cltv_expiry(invoice.min_final_cltv_expiry());
+
+    <span class="kw">for </span>hint <span class="kw">in </span>invoice.route_hints() {
+        invoice_builder = invoice_builder.private_route(hint);
+    }
+    <span class="kw">for </span>hint <span class="kw">in </span>hints {
+        invoice_builder = invoice_builder.private_route(hint.to_ldk_hint()<span class="question-mark">?</span>);
+    }
+
+    <span class="kw">let </span>invoice_builder = invoice_builder.build_raw();
+
+    <span class="kw">match </span>invoice_builder {
+        <span class="prelude-val">Ok</span>(invoice) =&gt; <span class="prelude-val">Ok</span>(invoice),
+        <span class="prelude-val">Err</span>(err) =&gt; <span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(err)),
+    }
+}
+
+<span class="doccomment">/// Parse a BOLT11 payment request and return a structure contains the parsed fields.
+</span><span class="kw">pub fn </span>parse_invoice(bolt11: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;LNInvoice&gt; {
+    <span class="kw">let </span>signed = bolt11
+        .strip_prefix(<span class="string">&quot;lightning:&quot;</span>)
+        .unwrap_or(bolt11)
+        .parse::&lt;SignedRawInvoice&gt;()<span class="question-mark">?</span>;
+    <span class="kw">let </span>invoice = Invoice::from_signed(signed)<span class="question-mark">?</span>;
+
+    <span class="kw">let </span>since_the_epoch = invoice.timestamp().duration_since(UNIX_EPOCH)<span class="question-mark">?</span>;
+
+    <span class="comment">// make sure signature is valid
+    </span>invoice.check_signature()<span class="question-mark">?</span>;
+
+    <span class="comment">// Try to take payee pubkey from the tagged fields, if doesn&#39;t exist recover it from the signature
+    </span><span class="kw">let </span>payee_pubkey: String = <span class="kw">match </span>invoice.payee_pub_key() {
+        <span class="prelude-val">Some</span>(key) =&gt; key.serialize().encode_hex::&lt;String&gt;(),
+        <span class="prelude-val">None </span>=&gt; invoice
+            .recover_payee_pub_key()
+            .serialize()
+            .encode_hex::&lt;String&gt;(),
+    };
+
+    <span class="comment">// convert hints to bridge interface
+    </span><span class="kw">let </span>invoice_hints = invoice.route_hints();
+    <span class="kw">let </span>converted_hints = invoice_hints.iter().map(RouteHint::from_ldk_hint).collect();
+    <span class="comment">// return the parsed invoice
+    </span><span class="kw">let </span>ln_invoice = LNInvoice {
+        bolt11: bolt11.to_string(),
+        payee_pubkey,
+        expiry: invoice.expiry_time().as_secs(),
+        amount_msat: invoice.amount_milli_satoshis(),
+        timestamp: since_the_epoch.as_secs(),
+        routing_hints: converted_hints,
+        payment_hash: invoice.payment_hash().encode_hex::&lt;String&gt;(),
+        payment_secret: invoice.payment_secret().<span class="number">0</span>.to_vec(),
+        description: <span class="kw">match </span>invoice.description() {
+            InvoiceDescription::Direct(msg) =&gt; <span class="prelude-val">Some</span>(msg.to_string()),
+            InvoiceDescription::Hash(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
+        },
+        description_hash: <span class="kw">match </span>invoice.description() {
+            InvoiceDescription::Direct(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
+            InvoiceDescription::Hash(h) =&gt; <span class="prelude-val">Some</span>(h.<span class="number">0</span>.to_string()),
+        },
+    };
+    <span class="prelude-val">Ok</span>(ln_invoice)
+}
+
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use </span><span class="kw">crate</span>::invoice::<span class="kw-2">*</span>;
+
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_parse_invoice() {
+        <span class="kw">let </span>payreq = String::from(<span class="string">&quot;lnbc110n1p38q3gtpp5ypz09jrd8p993snjwnm68cph4ftwp22le34xd4r8ftspwshxhmnsdqqxqyjw5qcqpxsp5htlg8ydpywvsa7h3u4hdn77ehs4z4e844em0apjyvmqfkzqhhd2q9qgsqqqyssqszpxzxt9uuqzymr7zxcdccj5g69s8q7zzjs7sgxn9ejhnvdh6gqjcy22mss2yexunagm5r2gqczh8k24cwrqml3njskm548aruhpwssq9nvrvz&quot;</span>);
+        <span class="kw">let </span>res = parse_invoice(<span class="kw-2">&amp;</span>payreq).unwrap();
+
+        <span class="kw">let </span>private_key_vec =
+            hex::decode(<span class="string">&quot;3e171115f50b2c355836dc026a6d54d525cf0d796eb50b3460a205d25c9d38fd&quot;</span>)
+                .unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>private_key: [u8; <span class="number">32</span>] = Default::default();
+        private_key.copy_from_slice(<span class="kw-2">&amp;</span>private_key_vec[<span class="number">0</span>..<span class="number">32</span>]);
+        <span class="kw">let </span>hint_hop = RouteHintHop {
+            src_node_id: res.payee_pubkey,
+            short_channel_id: <span class="number">1234</span>,
+            fees_base_msat: <span class="number">1000</span>,
+            fees_proportional_millionths: <span class="number">100</span>,
+            cltv_expiry_delta: <span class="number">2000</span>,
+            htlc_minimum_msat: <span class="prelude-val">Some</span>(<span class="number">3000</span>),
+            htlc_maximum_msat: <span class="prelude-val">Some</span>(<span class="number">4000</span>),
+        };
+        <span class="kw">let </span>route_hint = RouteHint {
+            hops: <span class="macro">vec!</span>[hint_hop],
+        };
+
+        <span class="kw">let </span>encoded = add_routing_hints(payreq, <span class="macro">vec!</span>[route_hint], <span class="number">100</span>).unwrap();
+
+        <span class="macro">print!</span>(<span class="string">&quot;{:?}&quot;</span>, encoded);
+    }
+}
+</code></pre></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="breez_sdk_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0 (69f9c33d7 2022-12-12)" ></div></body></html>

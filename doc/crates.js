@@ -1,0 +1,1 @@
+window.ALL_CRATES = ["breez_sdk_core"];
