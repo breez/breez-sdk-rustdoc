@@ -716,7 +716,7 @@
     <span class="kw">pub </span>bolt11: String,
 }
 
-<span class="doccomment">/// Details for a payment which closed a channel
+<span class="doccomment">/// Represents the funds that were on the user side of the channel at the time it was closed
 </span><span class="attribute">#[derive(PartialEq, Eq, Debug, Clone, Deserialize, Serialize)]
 </span><span class="kw">pub struct </span>ClosedChannelPaymentDetails {
     <span class="kw">pub </span>short_channel_id: String,
@@ -724,7 +724,7 @@
     <span class="kw">pub </span>funding_txid: String,
 }
 
-<span class="doccomment">/// LN channel managed by the LSP
+<span class="doccomment">/// LN channel
 </span><span class="attribute">#[derive(Clone, PartialEq, Eq, Debug)]
 </span><span class="kw">pub struct </span>Channel {
     <span class="kw">pub </span>funding_txid: String,

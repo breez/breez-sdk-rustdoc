@@ -1162,6 +1162,9 @@
 <span id="1162">1162</span>
 <span id="1163">1163</span>
 <span id="1164">1164</span>
+<span id="1165">1165</span>
+<span id="1166">1166</span>
+<span id="1167">1167</span>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::chain::{ChainService, MempoolSpace, RecommendedFees};
 <span class="kw">use </span><span class="kw">crate</span>::fiat::{FiatCurrency, Rate};
 <span class="kw">use </span><span class="kw">crate</span>::greenlight::Greenlight;
@@ -1208,9 +1211,12 @@
 /// initializing the [BreezServices].
 </span><span class="attribute">#[derive(Clone, Debug)]
 </span><span class="kw">pub enum </span>BreezEvent {
-    NewBlock { block: u32 },
-    InvoicePaid { details: InvoicePaidDetails },
-    Synced,
+    <span class="doccomment">/// Indicates that a new block has just been found
+    </span>NewBlock { block: u32 },
+    <span class="doccomment">/// Indicates that a new invoice has just been paid
+    </span>InvoicePaid { details: InvoicePaidDetails },
+    <span class="doccomment">/// Indicates that the local SDK state has just been sync-ed with the remote components
+    </span>Synced,
 }
 
 <span class="doccomment">/// Details of an invoice that has been paid, included as payload in an emitted [BreezEvent]
