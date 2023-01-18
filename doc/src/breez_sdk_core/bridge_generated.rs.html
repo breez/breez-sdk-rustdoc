@@ -1491,7 +1491,7 @@
         },
     )
 }
-<span class="kw">fn </span>wire_pay_lnurl_impl(
+<span class="kw">fn </span>wire_lnurl_pay_impl(
     port_: MessagePort,
     user_amount_sat: <span class="kw">impl </span>Wire2Api&lt;u64&gt; + UnwindSafe,
     comment: <span class="kw">impl </span>Wire2Api&lt;<span class="prelude-ty">Option</span>&lt;String&gt;&gt; + UnwindSafe,
@@ -1499,7 +1499,7 @@
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap(
         WrapInfo {
-            debug_name: <span class="string">&quot;pay_lnurl&quot;</span>,
+            debug_name: <span class="string">&quot;lnurl_pay&quot;</span>,
             port: <span class="prelude-val">Some</span>(port_),
             mode: FfiCallMode::Normal,
         },
@@ -1507,11 +1507,11 @@
             <span class="kw">let </span>api_user_amount_sat = user_amount_sat.wire2api();
             <span class="kw">let </span>api_comment = comment.wire2api();
             <span class="kw">let </span>api_req_data = req_data.wire2api();
-            <span class="kw">move </span>|task_callback| pay_lnurl(api_user_amount_sat, api_comment, api_req_data)
+            <span class="kw">move </span>|task_callback| lnurl_pay(api_user_amount_sat, api_comment, api_req_data)
         },
     )
 }
-<span class="kw">fn </span>wire_withdraw_lnurl_impl(
+<span class="kw">fn </span>wire_lnurl_withdraw_impl(
     port_: MessagePort,
     req_data: <span class="kw">impl </span>Wire2Api&lt;LnUrlWithdrawRequestData&gt; + UnwindSafe,
     amount_sats: <span class="kw">impl </span>Wire2Api&lt;u64&gt; + UnwindSafe,
@@ -1519,7 +1519,7 @@
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap(
         WrapInfo {
-            debug_name: <span class="string">&quot;withdraw_lnurl&quot;</span>,
+            debug_name: <span class="string">&quot;lnurl_withdraw&quot;</span>,
             port: <span class="prelude-val">Some</span>(port_),
             mode: FfiCallMode::Normal,
         },
@@ -1527,7 +1527,7 @@
             <span class="kw">let </span>api_req_data = req_data.wire2api();
             <span class="kw">let </span>api_amount_sats = amount_sats.wire2api();
             <span class="kw">let </span>api_description = description.wire2api();
-            <span class="kw">move </span>|task_callback| withdraw_lnurl(api_req_data, api_amount_sats, api_description)
+            <span class="kw">move </span>|task_callback| lnurl_withdraw(api_req_data, api_amount_sats, api_description)
         },
     )
 }

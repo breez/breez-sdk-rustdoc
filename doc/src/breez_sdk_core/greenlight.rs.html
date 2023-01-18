@@ -675,8 +675,6 @@
 <span id="675">675</span>
 <span id="676">676</span>
 <span id="677">677</span>
-<span id="678">678</span>
-<span id="679">679</span>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::invoice::parse_invoice;
 <span class="kw">use </span><span class="kw">crate</span>::models::{
     Config, GreenlightCredentials, LnPaymentDetails, Network, NodeAPI, NodeState, PaymentDetails,
@@ -714,10 +712,11 @@
     sdk_config: Config,
     tls_config: TlsConfig,
     signer: Signer,
+    scheduler: Scheduler,
 }
 
 <span class="kw">impl </span>Greenlight {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async fn </span>new(
         sdk_config: Config,
         seed: Vec&lt;u8&gt;,
         creds: GreenlightCredentials,
@@ -725,10 +724,12 @@
         <span class="kw">let </span>greenlight_network = sdk_config.network.clone().into();
         <span class="kw">let </span>tls_config = TlsConfig::new()<span class="question-mark">?</span>.identity(creds.device_cert, creds.device_key);
         <span class="kw">let </span>signer = Signer::new(seed, greenlight_network, tls_config.clone())<span class="question-mark">?</span>;
+        <span class="kw">let </span>scheduler = Scheduler::new(signer.node_id(), greenlight_network).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(Greenlight {
             sdk_config,
             tls_config,
             signer,
+            scheduler,
         })
     }
 
@@ -759,12 +760,7 @@
     }
 
     <span class="kw">async fn </span>get_client(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;node::Client&gt; {
-        <span class="kw">let </span>scheduler = Scheduler::new(
-            <span class="self">self</span>.signer.node_id(),
-            <span class="self">self</span>.sdk_config.network.clone().into(),
-        )
-        .<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="kw">let </span>client: node::Client = scheduler.schedule(<span class="self">self</span>.tls_config.clone()).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>client: node::Client = <span class="self">self</span>.scheduler.schedule(<span class="self">self</span>.tls_config.clone()).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(client)
     }
 }

@@ -1165,6 +1165,13 @@
 <span id="1165">1165</span>
 <span id="1166">1166</span>
 <span id="1167">1167</span>
+<span id="1168">1168</span>
+<span id="1169">1169</span>
+<span id="1170">1170</span>
+<span id="1171">1171</span>
+<span id="1172">1172</span>
+<span id="1173">1173</span>
+<span id="1174">1174</span>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::chain::{ChainService, MempoolSpace, RecommendedFees};
 <span class="kw">use </span><span class="kw">crate</span>::fiat::{FiatCurrency, Rate};
 <span class="kw">use </span><span class="kw">crate</span>::greenlight::Greenlight;
@@ -1202,7 +1209,7 @@
 <span class="kw">use </span>tonic::transport::{Channel, Uri};
 <span class="kw">use </span>tonic::{Request, Status};
 
-<span class="doccomment">/// Trait that can be used to react to various [BreezEvent]s emitted by the SDK
+<span class="doccomment">/// Trait that can be used to react to various [BreezEvent]s emitted by the SDK.
 </span><span class="kw">pub trait </span>EventListener: Send + Sync {
     <span class="kw">fn </span>on_event(<span class="kw-2">&amp;</span><span class="self">self</span>, e: BreezEvent);
 }
@@ -1311,7 +1318,8 @@
         BreezServicesBuilder::new(config)
             .greenlight_credentials(creds, seed)
             .build(<span class="prelude-val">Some</span>(event_listener))
-    }
+            .<span class="kw">await
+    </span>}
 
     <span class="doccomment">/// Starts the BreezServices background threads for this instance.
     ///
@@ -1374,7 +1382,7 @@
     /// This call will validate the given `user_amount_sat` and `comment` against the parameters
     /// of the LNURL endpoint (`req_data`). If they match the endpoint requirements, the LNURL payment
     /// is made.
-    </span><span class="kw">pub async fn </span>pay_lnurl(
+    </span><span class="kw">pub async fn </span>lnurl_pay(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         user_amount_sat: u64,
         comment: <span class="prelude-ty">Option</span>&lt;String&gt;,
@@ -1399,7 +1407,7 @@
     /// This call will validate the given `amount_sats` against the parameters
     /// of the LNURL endpoint (`req_data`). If they match the endpoint requirements, the LNURL withdraw
     /// request is made. A successful result here means the endpoint started the payment.
-    </span><span class="kw">pub async fn </span>withdraw_lnurl(
+    </span><span class="kw">pub async fn </span>lnurl_withdraw(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         req_data: LnUrlWithdrawRequestData,
         amount_sats: u64,
@@ -1787,7 +1795,10 @@
         <span class="self">self
     </span>}
 
-    <span class="kw">pub fn </span>build(<span class="kw-2">&amp;</span><span class="self">self</span>, listener: <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>EventListener&gt;&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;BreezServices&gt;&gt; {
+    <span class="kw">pub async fn </span>build(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        listener: <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>EventListener&gt;&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;BreezServices&gt;&gt; {
         <span class="kw">if </span><span class="self">self</span>.node_api.is_none() &amp;&amp; (<span class="self">self</span>.creds.is_none() || <span class="self">self</span>.seed.is_none()) {
             <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(
                 <span class="string">&quot;Either node_api or both credentials and seed should be provided&quot;
@@ -1805,7 +1816,8 @@
                 <span class="self">self</span>.config.clone(),
                 <span class="self">self</span>.seed.clone().unwrap(),
                 <span class="self">self</span>.creds.clone().unwrap(),
-            )<span class="question-mark">?</span>;
+            )
+            .<span class="kw">await</span><span class="question-mark">?</span>;
             node_api = <span class="prelude-val">Some</span>(Arc::new(greenlight));
         }
         <span class="kw">let </span>unwrapped_node_api = node_api.unwrap();
@@ -2192,7 +2204,8 @@
             .lsp_api(Arc::new(MockBreezServer {}))
             .fiat_api(Arc::new(MockBreezServer {}))
             .node_api(node_api)
-            .build(<span class="prelude-val">None</span>)<span class="question-mark">?</span>;
+            .build(<span class="prelude-val">None</span>)
+            .<span class="kw">await</span><span class="question-mark">?</span>;
 
         breez_services.sync().<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let </span>fetched_state = breez_services
@@ -2310,7 +2323,8 @@
             .fiat_api(Arc::new(MockBreezServer {}))
             .node_api(node_api)
             .build(<span class="prelude-val">None</span>)
-            .unwrap();
+            .<span class="kw">await
+            </span>.unwrap();
 
         breez_services
     }

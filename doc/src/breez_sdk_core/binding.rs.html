@@ -650,28 +650,28 @@
     block_on(<span class="kw">async </span>{ <span class="kw">crate</span>::input_parser::parse(<span class="kw-2">&amp;</span>s).<span class="kw">await </span>})
 }
 
-<span class="doccomment">/// See [BreezServices::pay_lnurl]
-</span><span class="kw">pub fn </span>pay_lnurl(
+<span class="doccomment">/// See [BreezServices::lnurl_pay]
+</span><span class="kw">pub fn </span>lnurl_pay(
     user_amount_sat: u64,
     comment: <span class="prelude-ty">Option</span>&lt;String&gt;,
     req_data: LnUrlPayRequestData,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;LnUrlPayResult&gt; {
     block_on(<span class="kw">async </span>{
         get_breez_services()<span class="question-mark">?
-            </span>.pay_lnurl(user_amount_sat, comment, req_data)
+            </span>.lnurl_pay(user_amount_sat, comment, req_data)
             .<span class="kw">await
     </span>})
 }
 
-<span class="doccomment">/// See [BreezServices::withdraw_lnurl]
-</span><span class="kw">pub fn </span>withdraw_lnurl(
+<span class="doccomment">/// See [BreezServices::lnurl_withdraw]
+</span><span class="kw">pub fn </span>lnurl_withdraw(
     req_data: LnUrlWithdrawRequestData,
     amount_sats: u64,
     description: <span class="prelude-ty">Option</span>&lt;String&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;LnUrlWithdrawCallbackStatus&gt; {
     block_on(<span class="kw">async </span>{
         get_breez_services()<span class="question-mark">?
-            </span>.withdraw_lnurl(req_data, amount_sats, description)
+            </span>.lnurl_withdraw(req_data, amount_sats, description)
             .<span class="kw">await
     </span>})
 }

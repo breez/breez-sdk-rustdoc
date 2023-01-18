@@ -427,6 +427,8 @@
 <span id="427">427</span>
 <span id="428">428</span>
 <span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
 </pre><pre class="rust"><code><span class="kw">use </span>anyhow::{anyhow, <span class="prelude-ty">Result</span>};
 <span class="kw">use </span>gl_client::pb::Peer;
 <span class="kw">use </span>gl_client::pb::WithdrawResponse;
@@ -538,7 +540,7 @@
     <span class="kw">pub </span>level: String,
 }
 
-<span class="doccomment">/// Configuration for the Breez Services.
+<span class="doccomment">/// Configuration for the Breez Services
 ///
 /// Use [Config::production] or [Config::staging] for default configs of the different supported
 /// environments.
@@ -580,11 +582,13 @@
     }
 }
 
-<span class="doccomment">/// Indicates the different kinds of supported environments for [crate::BreezServices]
-</span><span class="attribute">#[derive(Clone, Debug, Eq, PartialEq)]
+<span class="doccomment">/// Indicates the different kinds of supported environments for [crate::BreezServices].
+</span><span class="attribute">#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize, EnumString)]
 </span><span class="kw">pub enum </span>EnvironmentType {
-    Production,
-    Staging,
+    <span class="attribute">#[strum(serialize = <span class="string">&quot;production&quot;</span>)]
+    </span>Production,
+    <span class="attribute">#[strum(serialize = <span class="string">&quot;staging&quot;</span>)]
+    </span>Staging,
 }
 
 <span class="doccomment">/// Client-specific credentials to connect to and manage a Greenlight node in the cloud
@@ -678,7 +682,7 @@
     <span class="kw">pub </span>channels: Vec&lt;<span class="kw">crate</span>::models::Channel&gt;,
 }
 
-<span class="doccomment">/// Represents a payment, including its [PaymentType] and [PaymentDetails]
+<span class="doccomment">/// Represents a payment, including its [PaymentType] and [PaymentDetails].
 </span><span class="attribute">#[derive(PartialEq, Eq, Debug, Clone)]
 </span><span class="kw">pub struct </span>Payment {
     <span class="kw">pub </span>id: String,
@@ -716,7 +720,7 @@
     <span class="kw">pub </span>bolt11: String,
 }
 
-<span class="doccomment">/// Represents the funds that were on the user side of the channel at the time it was closed
+<span class="doccomment">/// Represents the funds that were on the user side of the channel at the time it was closed.
 </span><span class="attribute">#[derive(PartialEq, Eq, Debug, Clone, Deserialize, Serialize)]
 </span><span class="kw">pub struct </span>ClosedChannelPaymentDetails {
     <span class="kw">pub </span>short_channel_id: String,
@@ -724,7 +728,7 @@
     <span class="kw">pub </span>funding_txid: String,
 }
 
-<span class="doccomment">/// LN channel
+<span class="doccomment">/// Lightning channel
 </span><span class="attribute">#[derive(Clone, PartialEq, Eq, Debug)]
 </span><span class="kw">pub struct </span>Channel {
     <span class="kw">pub </span>funding_txid: String,
@@ -735,7 +739,7 @@
     <span class="kw">pub </span>closed_at: <span class="prelude-ty">Option</span>&lt;u64&gt;,
 }
 
-<span class="doccomment">/// State of a LN channel
+<span class="doccomment">/// State of a Lightning channel
 </span><span class="attribute">#[derive(Clone, PartialEq, Eq, Debug, EnumString, Display, Deserialize, Serialize)]
 </span><span class="kw">pub enum </span>ChannelState {
     PendingOpen,

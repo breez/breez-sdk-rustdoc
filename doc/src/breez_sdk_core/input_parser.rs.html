@@ -1176,7 +1176,7 @@
 
 <span class="kw">use </span><span class="kw">crate</span>::lnurl::maybe_replace_host_with_mockito_test_host;
 
-<span class="doccomment">/// Parses generic user input, typically pasted from clipboard or scanned from a QR
+<span class="doccomment">/// Parses generic user input, typically pasted from clipboard or scanned from a QR.
 ///
 /// # Examples
 ///
@@ -1478,7 +1478,7 @@
     }
 }
 
-<span class="doccomment">/// Different kinds of inputs supported by [parse], including any relevant details extracted from the input.
+<span class="doccomment">/// Different kinds of inputs supported by [parse], including any relevant details extracted from the input
 </span><span class="attribute">#[derive(Debug)]
 </span><span class="kw">pub enum </span>InputType {
     <span class="doccomment">/// # Supported standards
@@ -1539,7 +1539,7 @@
     },
 }
 
-<span class="doccomment">/// Generic struct containing the possible LNURL payloads returned when contacting a LNURL endpoint.
+<span class="doccomment">/// Generic struct containing the possible LNURL payloads returned when contacting a LNURL endpoint
 </span><span class="comment">// The uniffi bindings only supports enums with named fields.
 // We use #[serde(flatten)] to map the JSON payload fields to the inner enum &quot;data&quot; field
 // https://serde.rs/attr-flatten.html
@@ -1634,7 +1634,7 @@
     <span class="kw">pub </span>value: String,
 }
 
-<span class="doccomment">/// Wrapped in a [BitcoinAddress], this is the result of [parse] when given a plain or BIP-21 formatted on-chain bitcoin address
+<span class="doccomment">/// Wrapped in a [BitcoinAddress], this is the result of [parse] when given a plain or BIP-21 BTC address.
 </span><span class="attribute">#[derive(Debug)]
 </span><span class="kw">pub struct </span>BitcoinAddressData {
     <span class="kw">pub </span>address: String,
