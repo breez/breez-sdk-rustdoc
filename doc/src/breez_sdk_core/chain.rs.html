@@ -183,7 +183,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) base_url: String,
 }
 
-<span class="doccomment">/// Wrapper containing the result of the recommended fees query, based on mempool.space data
+<span class="doccomment">/// Wrapper containing the result of the recommended fees query, in sat/vByte, based on mempool.space data
 </span><span class="attribute">#[derive(Deserialize, Clone, Debug)]
 </span><span class="kw">pub struct </span>RecommendedFees {
     <span class="attribute">#[serde(rename(deserialize = <span class="string">&quot;fastestFee&quot;</span>))]

@@ -558,12 +558,12 @@
 <span class="kw">impl </span>Config {
     <span class="kw">pub fn </span>production() -&gt; <span class="self">Self </span>{
         Config {
-            breezserver: <span class="string">&quot;https://bs1-st.breez.technology:443&quot;</span>.to_string(),
+            breezserver: <span class="string">&quot;https://bs1.breez.technology:443&quot;</span>.to_string(),
             mempoolspace_url: <span class="string">&quot;https://mempool.space&quot;</span>.to_string(),
             working_dir: <span class="string">&quot;.&quot;</span>.to_string(),
             network: Bitcoin,
             payment_timeout_sec: <span class="number">30</span>,
-            default_lsp_id: <span class="prelude-val">Some</span>(String::from(<span class="string">&quot;ea51d025-042d-456c-8325-63e430797481&quot;</span>)),
+            default_lsp_id: <span class="prelude-val">Some</span>(String::from(<span class="string">&quot;03cea51f-b654-4fb0-8e82-eca137f236a0&quot;</span>)),
             api_key: <span class="prelude-val">None</span>,
         }
     }
