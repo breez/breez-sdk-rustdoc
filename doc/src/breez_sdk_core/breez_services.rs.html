@@ -1470,10 +1470,10 @@
         <span class="self">self</span>.fiat_api.fetch_fiat_rates().<span class="kw">await
     </span>}
 
-    <span class="doccomment">/// List all available fiat currencies
-    </span><span class="kw">pub fn </span>list_fiat_currencies(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;FiatCurrency&gt;&gt; {
-        <span class="self">self</span>.fiat_api.list_fiat_currencies()
-    }
+    <span class="doccomment">/// List all supported fiat currencies for which there is a known exchange rate.
+    </span><span class="kw">pub async fn </span>list_fiat_currencies(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;FiatCurrency&gt;&gt; {
+        <span class="self">self</span>.fiat_api.list_fiat_currencies().<span class="kw">await
+    </span>}
 
     <span class="doccomment">/// List available LSPs that can be selected by the user
     </span><span class="kw">pub async fn </span>list_lsps(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;LspInformation&gt;&gt; {
@@ -1726,7 +1726,7 @@
         payment_time: channel
             .closed_at
             .unwrap_or(now.duration_since(UNIX_EPOCH)<span class="question-mark">?</span>.as_secs()) <span class="kw">as </span>i64,
-        amount_msat: -(channel.spendable_msat <span class="kw">as </span>i64),
+        amount_msat: channel.spendable_msat <span class="kw">as </span>i64,
         fee_msat: <span class="number">0</span>,
         pending: channel.state == ChannelState::PendingClose,
         description: <span class="prelude-val">Some</span>(<span class="string">&quot;Closed Channel&quot;</span>.to_string()),

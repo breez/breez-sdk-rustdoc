@@ -429,6 +429,9 @@
 <span id="429">429</span>
 <span id="430">430</span>
 <span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
 </pre><pre class="rust"><code><span class="kw">use </span>anyhow::{anyhow, <span class="prelude-ty">Result</span>};
 <span class="kw">use </span>gl_client::pb::Peer;
 <span class="kw">use </span>gl_client::pb::WithdrawResponse;
@@ -505,8 +508,11 @@
 <span class="doccomment">/// Trait covering fiat-related functionality
 </span><span class="attribute">#[tonic::async_trait]
 </span><span class="kw">pub trait </span>FiatAPI: Send + Sync {
-    <span class="kw">fn </span>list_fiat_currencies(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;FiatCurrency&gt;&gt;;
-    <span class="kw">async fn </span>fetch_fiat_rates(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;Rate&gt;&gt;;
+    <span class="doccomment">/// List all supported fiat currencies for which there is a known exchange rate.
+    </span><span class="kw">async fn </span>list_fiat_currencies(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;FiatCurrency&gt;&gt;;
+
+    <span class="doccomment">/// Get the live rates from the server.
+    </span><span class="kw">async fn </span>fetch_fiat_rates(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;Rate&gt;&gt;;
 }
 
 <span class="doccomment">/// Summary of an ongoing swap
