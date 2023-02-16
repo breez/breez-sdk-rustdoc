@@ -1,176 +1,192 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `sdk-core/src/chain.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>chain.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../breez_sdk_core/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
-<span id="2">2</span>
-<span id="3">3</span>
-<span id="4">4</span>
-<span id="5">5</span>
-<span id="6">6</span>
-<span id="7">7</span>
-<span id="8">8</span>
-<span id="9">9</span>
-<span id="10">10</span>
-<span id="11">11</span>
-<span id="12">12</span>
-<span id="13">13</span>
-<span id="14">14</span>
-<span id="15">15</span>
-<span id="16">16</span>
-<span id="17">17</span>
-<span id="18">18</span>
-<span id="19">19</span>
-<span id="20">20</span>
-<span id="21">21</span>
-<span id="22">22</span>
-<span id="23">23</span>
-<span id="24">24</span>
-<span id="25">25</span>
-<span id="26">26</span>
-<span id="27">27</span>
-<span id="28">28</span>
-<span id="29">29</span>
-<span id="30">30</span>
-<span id="31">31</span>
-<span id="32">32</span>
-<span id="33">33</span>
-<span id="34">34</span>
-<span id="35">35</span>
-<span id="36">36</span>
-<span id="37">37</span>
-<span id="38">38</span>
-<span id="39">39</span>
-<span id="40">40</span>
-<span id="41">41</span>
-<span id="42">42</span>
-<span id="43">43</span>
-<span id="44">44</span>
-<span id="45">45</span>
-<span id="46">46</span>
-<span id="47">47</span>
-<span id="48">48</span>
-<span id="49">49</span>
-<span id="50">50</span>
-<span id="51">51</span>
-<span id="52">52</span>
-<span id="53">53</span>
-<span id="54">54</span>
-<span id="55">55</span>
-<span id="56">56</span>
-<span id="57">57</span>
-<span id="58">58</span>
-<span id="59">59</span>
-<span id="60">60</span>
-<span id="61">61</span>
-<span id="62">62</span>
-<span id="63">63</span>
-<span id="64">64</span>
-<span id="65">65</span>
-<span id="66">66</span>
-<span id="67">67</span>
-<span id="68">68</span>
-<span id="69">69</span>
-<span id="70">70</span>
-<span id="71">71</span>
-<span id="72">72</span>
-<span id="73">73</span>
-<span id="74">74</span>
-<span id="75">75</span>
-<span id="76">76</span>
-<span id="77">77</span>
-<span id="78">78</span>
-<span id="79">79</span>
-<span id="80">80</span>
-<span id="81">81</span>
-<span id="82">82</span>
-<span id="83">83</span>
-<span id="84">84</span>
-<span id="85">85</span>
-<span id="86">86</span>
-<span id="87">87</span>
-<span id="88">88</span>
-<span id="89">89</span>
-<span id="90">90</span>
-<span id="91">91</span>
-<span id="92">92</span>
-<span id="93">93</span>
-<span id="94">94</span>
-<span id="95">95</span>
-<span id="96">96</span>
-<span id="97">97</span>
-<span id="98">98</span>
-<span id="99">99</span>
-<span id="100">100</span>
-<span id="101">101</span>
-<span id="102">102</span>
-<span id="103">103</span>
-<span id="104">104</span>
-<span id="105">105</span>
-<span id="106">106</span>
-<span id="107">107</span>
-<span id="108">108</span>
-<span id="109">109</span>
-<span id="110">110</span>
-<span id="111">111</span>
-<span id="112">112</span>
-<span id="113">113</span>
-<span id="114">114</span>
-<span id="115">115</span>
-<span id="116">116</span>
-<span id="117">117</span>
-<span id="118">118</span>
-<span id="119">119</span>
-<span id="120">120</span>
-<span id="121">121</span>
-<span id="122">122</span>
-<span id="123">123</span>
-<span id="124">124</span>
-<span id="125">125</span>
-<span id="126">126</span>
-<span id="127">127</span>
-<span id="128">128</span>
-<span id="129">129</span>
-<span id="130">130</span>
-<span id="131">131</span>
-<span id="132">132</span>
-<span id="133">133</span>
-<span id="134">134</span>
-<span id="135">135</span>
-<span id="136">136</span>
-<span id="137">137</span>
-<span id="138">138</span>
-<span id="139">139</span>
-<span id="140">140</span>
-<span id="141">141</span>
-<span id="142">142</span>
-<span id="143">143</span>
-<span id="144">144</span>
-<span id="145">145</span>
-<span id="146">146</span>
-<span id="147">147</span>
-<span id="148">148</span>
-<span id="149">149</span>
-<span id="150">150</span>
-<span id="151">151</span>
-<span id="152">152</span>
-<span id="153">153</span>
-<span id="154">154</span>
-<span id="155">155</span>
-<span id="156">156</span>
-<span id="157">157</span>
-<span id="158">158</span>
-<span id="159">159</span>
-<span id="160">160</span>
-<span id="161">161</span>
-<span id="162">162</span>
-<span id="163">163</span>
-<span id="164">164</span>
-<span id="165">165</span>
-<span id="166">166</span>
-<span id="167">167</span>
-<span id="168">168</span>
-<span id="169">169</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `sdk-core/src/chain.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>chain.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-6827029ac823cab7.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../static.files/light-ebce58d0a40c3431.css"><link rel="stylesheet" disabled href="../../static.files/dark-f23faae4a2daf9a6.css"><link rel="stylesheet" disabled href="../../static.files/ayu-8af5e100b21cd173.css"><script id="default-settings" ></script><script src="../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../static.files/source-script-5cf2e01a42cc9858.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-c55e1eb52e1886b4.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../breez_sdk_core/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<a href="#2" id="2">2</a>
+<a href="#3" id="3">3</a>
+<a href="#4" id="4">4</a>
+<a href="#5" id="5">5</a>
+<a href="#6" id="6">6</a>
+<a href="#7" id="7">7</a>
+<a href="#8" id="8">8</a>
+<a href="#9" id="9">9</a>
+<a href="#10" id="10">10</a>
+<a href="#11" id="11">11</a>
+<a href="#12" id="12">12</a>
+<a href="#13" id="13">13</a>
+<a href="#14" id="14">14</a>
+<a href="#15" id="15">15</a>
+<a href="#16" id="16">16</a>
+<a href="#17" id="17">17</a>
+<a href="#18" id="18">18</a>
+<a href="#19" id="19">19</a>
+<a href="#20" id="20">20</a>
+<a href="#21" id="21">21</a>
+<a href="#22" id="22">22</a>
+<a href="#23" id="23">23</a>
+<a href="#24" id="24">24</a>
+<a href="#25" id="25">25</a>
+<a href="#26" id="26">26</a>
+<a href="#27" id="27">27</a>
+<a href="#28" id="28">28</a>
+<a href="#29" id="29">29</a>
+<a href="#30" id="30">30</a>
+<a href="#31" id="31">31</a>
+<a href="#32" id="32">32</a>
+<a href="#33" id="33">33</a>
+<a href="#34" id="34">34</a>
+<a href="#35" id="35">35</a>
+<a href="#36" id="36">36</a>
+<a href="#37" id="37">37</a>
+<a href="#38" id="38">38</a>
+<a href="#39" id="39">39</a>
+<a href="#40" id="40">40</a>
+<a href="#41" id="41">41</a>
+<a href="#42" id="42">42</a>
+<a href="#43" id="43">43</a>
+<a href="#44" id="44">44</a>
+<a href="#45" id="45">45</a>
+<a href="#46" id="46">46</a>
+<a href="#47" id="47">47</a>
+<a href="#48" id="48">48</a>
+<a href="#49" id="49">49</a>
+<a href="#50" id="50">50</a>
+<a href="#51" id="51">51</a>
+<a href="#52" id="52">52</a>
+<a href="#53" id="53">53</a>
+<a href="#54" id="54">54</a>
+<a href="#55" id="55">55</a>
+<a href="#56" id="56">56</a>
+<a href="#57" id="57">57</a>
+<a href="#58" id="58">58</a>
+<a href="#59" id="59">59</a>
+<a href="#60" id="60">60</a>
+<a href="#61" id="61">61</a>
+<a href="#62" id="62">62</a>
+<a href="#63" id="63">63</a>
+<a href="#64" id="64">64</a>
+<a href="#65" id="65">65</a>
+<a href="#66" id="66">66</a>
+<a href="#67" id="67">67</a>
+<a href="#68" id="68">68</a>
+<a href="#69" id="69">69</a>
+<a href="#70" id="70">70</a>
+<a href="#71" id="71">71</a>
+<a href="#72" id="72">72</a>
+<a href="#73" id="73">73</a>
+<a href="#74" id="74">74</a>
+<a href="#75" id="75">75</a>
+<a href="#76" id="76">76</a>
+<a href="#77" id="77">77</a>
+<a href="#78" id="78">78</a>
+<a href="#79" id="79">79</a>
+<a href="#80" id="80">80</a>
+<a href="#81" id="81">81</a>
+<a href="#82" id="82">82</a>
+<a href="#83" id="83">83</a>
+<a href="#84" id="84">84</a>
+<a href="#85" id="85">85</a>
+<a href="#86" id="86">86</a>
+<a href="#87" id="87">87</a>
+<a href="#88" id="88">88</a>
+<a href="#89" id="89">89</a>
+<a href="#90" id="90">90</a>
+<a href="#91" id="91">91</a>
+<a href="#92" id="92">92</a>
+<a href="#93" id="93">93</a>
+<a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a>
+<a href="#96" id="96">96</a>
+<a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
+<a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
+<a href="#103" id="103">103</a>
+<a href="#104" id="104">104</a>
+<a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a>
+<a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
+<a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
+<a href="#162" id="162">162</a>
+<a href="#163" id="163">163</a>
+<a href="#164" id="164">164</a>
+<a href="#165" id="165">165</a>
+<a href="#166" id="166">166</a>
+<a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
+<a href="#169" id="169">169</a>
+<a href="#170" id="170">170</a>
+<a href="#171" id="171">171</a>
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
 </pre><pre class="rust"><code><span class="kw">use </span>anyhow::Result;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 
-<span class="attribute">#[tonic::async_trait]
+<span class="attr">#[tonic::async_trait]
 </span><span class="kw">pub trait </span>ChainService: Send + Sync {
     <span class="kw">async fn </span>recommended_fees(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;RecommendedFees&gt;;
     <span class="kw">async fn </span>address_transactions(<span class="kw-2">&amp;</span><span class="self">self</span>, address: String) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;OnchainTx&gt;&gt;;
@@ -178,31 +194,31 @@
     <span class="kw">async fn </span>broadcast_transaction(<span class="kw-2">&amp;</span><span class="self">self</span>, tx: Vec&lt;u8&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt;;
 }
 
-<span class="attribute">#[derive(Clone)]
+<span class="attr">#[derive(Clone)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>MempoolSpace {
     <span class="kw">pub</span>(<span class="kw">crate</span>) base_url: String,
 }
 
 <span class="doccomment">/// Wrapper containing the result of the recommended fees query, in sat/vByte, based on mempool.space data
-</span><span class="attribute">#[derive(Deserialize, Clone, Debug)]
+</span><span class="attr">#[derive(Deserialize, Clone, Debug)]
 </span><span class="kw">pub struct </span>RecommendedFees {
-    <span class="attribute">#[serde(rename(deserialize = <span class="string">&quot;fastestFee&quot;</span>))]
+    <span class="attr">#[serde(rename(deserialize = <span class="string">&quot;fastestFee&quot;</span>))]
     </span><span class="kw">pub </span>fastest_fee: u32,
 
-    <span class="attribute">#[serde(rename(deserialize = <span class="string">&quot;halfHourFee&quot;</span>))]
+    <span class="attr">#[serde(rename(deserialize = <span class="string">&quot;halfHourFee&quot;</span>))]
     </span><span class="kw">pub </span>half_hour_fee: u32,
 
-    <span class="attribute">#[serde(rename(deserialize = <span class="string">&quot;hourFee&quot;</span>))]
+    <span class="attr">#[serde(rename(deserialize = <span class="string">&quot;hourFee&quot;</span>))]
     </span><span class="kw">pub </span>hour_fee: u32,
 
-    <span class="attribute">#[serde(rename(deserialize = <span class="string">&quot;economyFee&quot;</span>))]
+    <span class="attr">#[serde(rename(deserialize = <span class="string">&quot;economyFee&quot;</span>))]
     </span><span class="kw">pub </span>economy_fee: u32,
 
-    <span class="attribute">#[serde(rename(deserialize = <span class="string">&quot;minimumFee&quot;</span>))]
+    <span class="attr">#[serde(rename(deserialize = <span class="string">&quot;minimumFee&quot;</span>))]
     </span><span class="kw">pub </span>minimum_fee: u32,
 }
 
-<span class="attribute">#[derive(Deserialize, Serialize, Clone, Debug)]
+<span class="attr">#[derive(Deserialize, Serialize, Clone, Debug)]
 </span><span class="kw">pub struct </span>OnchainTx {
     <span class="kw">pub </span>txid: String,
     <span class="kw">pub </span>version: u32,
@@ -215,15 +231,15 @@
     <span class="kw">pub </span>status: TxStatus,
 }
 
-<span class="attribute">#[derive(Deserialize, Serialize, Clone, Debug)]
+<span class="attr">#[derive(Deserialize, Serialize, Clone, Debug)]
 </span><span class="kw">pub struct </span>TxStatus {
     <span class="kw">pub </span>confirmed: bool,
-    <span class="kw">pub </span>block_height: u32,
-    <span class="kw">pub </span>block_hash: String,
-    <span class="kw">pub </span>block_time: u64,
+    <span class="kw">pub </span>block_height: <span class="prelude-ty">Option</span>&lt;u32&gt;,
+    <span class="kw">pub </span>block_hash: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    <span class="kw">pub </span>block_time: <span class="prelude-ty">Option</span>&lt;u64&gt;,
 }
 
-<span class="attribute">#[derive(Deserialize, Serialize, Clone, Debug)]
+<span class="attr">#[derive(Deserialize, Serialize, Clone, Debug)]
 </span><span class="kw">pub struct </span>Vout {
     <span class="kw">pub </span>scriptpubkey: String,
     <span class="kw">pub </span>scriptpubkey_asm: String,
@@ -232,14 +248,14 @@
     <span class="kw">pub </span>value: u32,
 }
 
-<span class="attribute">#[derive(Deserialize, Serialize, Clone, Debug)]
+<span class="attr">#[derive(Deserialize, Serialize, Clone, Debug)]
 </span><span class="kw">pub struct </span>Vin {
     <span class="kw">pub </span>txid: String,
     <span class="kw">pub </span>vout: u32,
     <span class="kw">pub </span>prevout: Vout,
     <span class="kw">pub </span>scriptsig: String,
     <span class="kw">pub </span>scriptsig_asm: String,
-    <span class="kw">pub </span>witness: Vec&lt;String&gt;,
+    <span class="kw">pub </span>witness: <span class="prelude-ty">Option</span>&lt;Vec&lt;String&gt;&gt;,
     <span class="kw">pub </span>is_coinbase: bool,
     <span class="kw">pub </span>sequence: u32,
 }
@@ -258,7 +274,7 @@
     }
 }
 
-<span class="attribute">#[tonic::async_trait]
+<span class="attr">#[tonic::async_trait]
 </span><span class="kw">impl </span>ChainService <span class="kw">for </span>MempoolSpace {
     <span class="kw">async fn </span>recommended_fees(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;RecommendedFees&gt; {
         <span class="prelude-val">Ok</span>(
@@ -300,14 +316,14 @@
             </span>.map_err(anyhow::Error::msg)
     }
 }
-<span class="attribute">#[cfg(test)]
+<span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
     <span class="kw">use </span><span class="kw">crate</span>::chain::{MempoolSpace, OnchainTx};
     <span class="kw">use </span>tokio::test;
 
     <span class="kw">use </span><span class="kw">super</span>::ChainService;
 
-    <span class="attribute">#[tokio::test]
+    <span class="attr">#[tokio::test]
     </span><span class="kw">async fn </span>test_recommended_fees() {
         <span class="kw">let </span>ms = Box::new(MempoolSpace::from_base_url(
             <span class="string">&quot;https://mempool.space&quot;</span>.to_string(),
@@ -320,7 +336,7 @@
         <span class="macro">assert!</span>(fees.minimum_fee &gt; <span class="number">0</span>);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">async fn </span>test_address_transactions() {
         <span class="kw">let </span>ms = MempoolSpace::from_base_url(<span class="string">&quot;https://mempool.space&quot;</span>.to_string());
         <span class="kw">let </span>txs = ms
@@ -330,11 +346,27 @@
         <span class="kw">let </span>serialized_res = serde_json::to_string(<span class="kw-2">&amp;</span>txs).unwrap();
 
         <span class="kw">let </span>expected = <span class="string">r#&quot;[{&quot;txid&quot;:&quot;5e0668bf1cd24f2f8656ee82d4886f5303a06b26838e24b7db73afc59e228985&quot;,&quot;version&quot;:2,&quot;locktime&quot;:0,&quot;vin&quot;:[{&quot;txid&quot;:&quot;07c9d3fbffc20f96ea7c93ef3bcdf346c8a8456c25850ea76be62b24a7cf690c&quot;,&quot;vout&quot;:0,&quot;prevout&quot;:{&quot;scriptpubkey&quot;:&quot;001465c96c830168b8f0b584294d3b9716bb8584c2d8&quot;,&quot;scriptpubkey_asm&quot;:&quot;OP_0 OP_PUSHBYTES_20 65c96c830168b8f0b584294d3b9716bb8584c2d8&quot;,&quot;scriptpubkey_type&quot;:&quot;v0_p2wpkh&quot;,&quot;scriptpubkey_address&quot;:&quot;bc1qvhykeqcpdzu0pdvy99xnh9ckhwzcfskct6h6l2&quot;,&quot;value&quot;:263216},&quot;scriptsig&quot;:&quot;&quot;,&quot;scriptsig_asm&quot;:&quot;&quot;,&quot;witness&quot;:[&quot;3045022100a2f0ac810ce88625890f7e212d175eb1cd6b7c73ffed95a2bec06b38e0b2de060220036675c6a5c89845988cc27e7acba772e7655f2abb0575449471d8323d5900b301&quot;,&quot;026b815dddaf1687a05349d75d25911c9b6e2381e55ba72148009cfa0a577c89d9&quot;],&quot;is_coinbase&quot;:false,&quot;sequence&quot;:0},{&quot;txid&quot;:&quot;6d6766c283093e2d043ae877bb915175b3d8672a20f0459300267aaab1b5766a&quot;,&quot;vout&quot;:0,&quot;prevout&quot;:{&quot;scriptpubkey&quot;:&quot;001485b33c1937058ed08b5b122e30caf18e67ccb282&quot;,&quot;scriptpubkey_asm&quot;:&quot;OP_0 OP_PUSHBYTES_20 85b33c1937058ed08b5b122e30caf18e67ccb282&quot;,&quot;scriptpubkey_type&quot;:&quot;v0_p2wpkh&quot;,&quot;scriptpubkey_address&quot;:&quot;bc1qskencxfhqk8dpz6mzghrpjh33enuev5zh0mrjw&quot;,&quot;value&quot;:33247},&quot;scriptsig&quot;:&quot;&quot;,&quot;scriptsig_asm&quot;:&quot;&quot;,&quot;witness&quot;:[&quot;304402200272cac1a312aae2a4ee64150e5b26e611a56509a467176e38c905b632d3ce56022005497d0d3ff14911214cb0fbb22a1aa16830ba669f6ff38723684750ceb4b11a01&quot;,&quot;0397d3b72557bd2044508ee3b22d1216b3f871c0963500f8c8dc6a143ee7a6a206&quot;],&quot;is_coinbase&quot;:false,&quot;sequence&quot;:0},{&quot;txid&quot;:&quot;81af33ae00a9dadeb83b915b05742e986a470fff7456540e3f018deb94abda0e&quot;,&quot;vout&quot;:1,&quot;prevout&quot;:{&quot;scriptpubkey&quot;:&quot;001431505647092347abb0e4d2a34f6773b74a999d45&quot;,&quot;scriptpubkey_asm&quot;:&quot;OP_0 OP_PUSHBYTES_20 31505647092347abb0e4d2a34f6773b74a999d45&quot;,&quot;scriptpubkey_type&quot;:&quot;v0_p2wpkh&quot;,&quot;scriptpubkey_address&quot;:&quot;bc1qx9g9v3cfydr6hv8y62357emnka9fn8294e73yl&quot;,&quot;value&quot;:172952},&quot;scriptsig&quot;:&quot;&quot;,&quot;scriptsig_asm&quot;:&quot;&quot;,&quot;witness&quot;:[&quot;30450221008426c1b3d535f10c7cbccec6be3ea9be3514f3a86bf234584722665325283f35022010b6a617a465d1d7eea45562632f0ab80b0894da44b67fab65191a98fd9d3acb01&quot;,&quot;0221250914423379d3caf662297e8069621ca2c362cf92107388483929f4d9eb67&quot;],&quot;is_coinbase&quot;:false,&quot;sequence&quot;:0}],&quot;vout&quot;:[{&quot;scriptpubkey&quot;:&quot;001459c70c09f22b1bb007439af43b6809d6a2bc31b5&quot;,&quot;scriptpubkey_asm&quot;:&quot;OP_0 OP_PUSHBYTES_20 59c70c09f22b1bb007439af43b6809d6a2bc31b5&quot;,&quot;scriptpubkey_type&quot;:&quot;v0_p2wpkh&quot;,&quot;scriptpubkey_address&quot;:&quot;bc1qt8rscz0j9vdmqp6rnt6rk6qf663tcvd44f6gxa&quot;,&quot;value&quot;:2920},{&quot;scriptpubkey&quot;:&quot;00202c404e6e9c4d032267a29a6074c5db9333c6ccae0c9d430ced666316233d8c2f&quot;,&quot;scriptpubkey_asm&quot;:&quot;OP_0 OP_PUSHBYTES_32 2c404e6e9c4d032267a29a6074c5db9333c6ccae0c9d430ced666316233d8c2f&quot;,&quot;scriptpubkey_type&quot;:&quot;v0_p2wsh&quot;,&quot;scriptpubkey_address&quot;:&quot;bc1q93qyum5uf5pjyeaznfs8f3wmjveudn9wpjw5xr8dve33vgea3shs9jhvww&quot;,&quot;value&quot;:442557}],&quot;size&quot;:532,&quot;weight&quot;:1153,&quot;fee&quot;:23938,&quot;status&quot;:{&quot;confirmed&quot;:true,&quot;block_height&quot;:674358,&quot;block_hash&quot;:&quot;00000000000000000004c6171622f56692cc480d3c76ecae4355e69699a6ae44&quot;,&quot;block_time&quot;:1615595727}},{&quot;txid&quot;:&quot;07c9d3fbffc20f96ea7c93ef3bcdf346c8a8456c25850ea76be62b24a7cf690c&quot;,&quot;version&quot;:2,&quot;locktime&quot;:0,&quot;vin&quot;:[{&quot;txid&quot;:&quot;9332d8d11d81c3b674caff75db5543491e7f22e619ecc034bedf4a007518fe3a&quot;,&quot;vout&quot;:0,&quot;prevout&quot;:{&quot;scriptpubkey&quot;:&quot;001415f0dad74806b03612687038d4f5bab200afcf8e&quot;,&quot;scriptpubkey_asm&quot;:&quot;OP_0 OP_PUSHBYTES_20 15f0dad74806b03612687038d4f5bab200afcf8e&quot;,&quot;scriptpubkey_type&quot;:&quot;v0_p2wpkh&quot;,&quot;scriptpubkey_address&quot;:&quot;bc1qzhcd446gq6crvyngwqudfad6kgq2lnuw9r2a86&quot;,&quot;value&quot;:470675},&quot;scriptsig&quot;:&quot;&quot;,&quot;scriptsig_asm&quot;:&quot;&quot;,&quot;witness&quot;:[&quot;3045022100f30d84532f96b5e489047174e81394883cd519d427ca8f4facc2366f718cc678022007c083634402f40708c645cd0c1a2757b56de2076ca6ee856e514859381cd93801&quot;,&quot;02942b44eb4289e3af0aeeb73dfa82b0a5c8a3a06ae85bfd22aa3dcfcd64096462&quot;],&quot;is_coinbase&quot;:false,&quot;sequence&quot;:0},{&quot;txid&quot;:&quot;c62da0c2d1929ab2a2c04d4fbae2a6e4e947f867cba584d1f80c4a1a62f4a75f&quot;,&quot;vout&quot;:1,&quot;prevout&quot;:{&quot;scriptpubkey&quot;:&quot;0014f0c1d6b471d5e4a483fc146d4220a4e81587bf11&quot;,&quot;scriptpubkey_asm&quot;:&quot;OP_0 OP_PUSHBYTES_20 f0c1d6b471d5e4a483fc146d4220a4e81587bf11&quot;,&quot;scriptpubkey_type&quot;:&quot;v0_p2wpkh&quot;,&quot;scriptpubkey_address&quot;:&quot;bc1q7rqaddr36hj2fqluz3k5yg9yaq2c00c3tw4qy5&quot;,&quot;value&quot;:899778},&quot;scriptsig&quot;:&quot;&quot;,&quot;scriptsig_asm&quot;:&quot;&quot;,&quot;witness&quot;:[&quot;304402202da0eac25786003181526c4fe1592f982aa8d0f32c642a5103cdebbf4aa8b5a80220750cd6859bfb9a7df8d7c4d79a70e17a6df87f150fe1fdaade4650332ef0f47c01&quot;,&quot;02ecab80fcfe949633064c25fc33854fd09b8730decdf679db1f429bce201ec685&quot;],&quot;is_coinbase&quot;:false,&quot;sequence&quot;:0}],&quot;vout&quot;:[{&quot;scriptpubkey&quot;:&quot;001465c96c830168b8f0b584294d3b9716bb8584c2d8&quot;,&quot;scriptpubkey_asm&quot;:&quot;OP_0 OP_PUSHBYTES_20 65c96c830168b8f0b584294d3b9716bb8584c2d8&quot;,&quot;scriptpubkey_type&quot;:&quot;v0_p2wpkh&quot;,&quot;scriptpubkey_address&quot;:&quot;bc1qvhykeqcpdzu0pdvy99xnh9ckhwzcfskct6h6l2&quot;,&quot;value&quot;:263216},{&quot;scriptpubkey&quot;:&quot;00200cea60ae9eea43e64b17ba65a4c17bd3acf9dac307825deda85d5a093181dbc0&quot;,&quot;scriptpubkey_asm&quot;:&quot;OP_0 OP_PUSHBYTES_32 0cea60ae9eea43e64b17ba65a4c17bd3acf9dac307825deda85d5a093181dbc0&quot;,&quot;scriptpubkey_type&quot;:&quot;v0_p2wsh&quot;,&quot;scriptpubkey_address&quot;:&quot;bc1qpn4xpt57afp7vjchhfj6fstm6wk0nkkrq7p9mmdgt4dqjvvpm0qqlxqrns&quot;,&quot;value&quot;:1088924}],&quot;size&quot;:383,&quot;weight&quot;:881,&quot;fee&quot;:18313,&quot;status&quot;:{&quot;confirmed&quot;:true,&quot;block_height&quot;:674357,&quot;block_hash&quot;:&quot;00000000000000000008d0d007995a8bc9d60de17bd6b55e28a6e4c6918cb206&quot;,&quot;block_time&quot;:1615594996}}]&quot;#</span>;
-        <span class="kw">let </span>expected_txs: Vec&lt;OnchainTx&gt; = serde_json::from_str(<span class="kw-2">&amp;</span>expected).unwrap();
+        <span class="kw">let </span>expected_txs: Vec&lt;OnchainTx&gt; = serde_json::from_str(expected).unwrap();
         <span class="kw">let </span>expected_serialized = serde_json::to_string(<span class="kw-2">&amp;</span>expected_txs).unwrap();
 
         <span class="macro">assert_eq!</span>(expected_serialized, serialized_res);
     }
-}
+
+    <span class="comment">// #[test]
+    // async fn test_address_transactions_mempool() {
+    //     let ms = MempoolSpace::from_base_url(&quot;https://mempool.space&quot;.to_string());
+    //     let txs = ms
+    //         .address_transactions(&quot;1N4f3y3LYJZ2Qd9FyPt3AcHp451qt12paR&quot;.to_string())
+    //         .await
+    //         .unwrap();
+    //     let serialized_res = serde_json::to_string(&amp;txs).unwrap();
+
+    //     let expected = r#&quot;[{&quot;txid&quot;:&quot;5e0668bf1cd24f2f8656ee82d4886f5303a06b26838e24b7db73afc59e228985&quot;,&quot;version&quot;:2,&quot;locktime&quot;:0,&quot;vin&quot;:[{&quot;txid&quot;:&quot;07c9d3fbffc20f96ea7c93ef3bcdf346c8a8456c25850ea76be62b24a7cf690c&quot;,&quot;vout&quot;:0,&quot;prevout&quot;:{&quot;scriptpubkey&quot;:&quot;001465c96c830168b8f0b584294d3b9716bb8584c2d8&quot;,&quot;scriptpubkey_asm&quot;:&quot;OP_0 OP_PUSHBYTES_20 65c96c830168b8f0b584294d3b9716bb8584c2d8&quot;,&quot;scriptpubkey_type&quot;:&quot;v0_p2wpkh&quot;,&quot;scriptpubkey_address&quot;:&quot;bc1qvhykeqcpdzu0pdvy99xnh9ckhwzcfskct6h6l2&quot;,&quot;value&quot;:263216},&quot;scriptsig&quot;:&quot;&quot;,&quot;scriptsig_asm&quot;:&quot;&quot;,&quot;witness&quot;:[&quot;3045022100a2f0ac810ce88625890f7e212d175eb1cd6b7c73ffed95a2bec06b38e0b2de060220036675c6a5c89845988cc27e7acba772e7655f2abb0575449471d8323d5900b301&quot;,&quot;026b815dddaf1687a05349d75d25911c9b6e2381e55ba72148009cfa0a577c89d9&quot;],&quot;is_coinbase&quot;:false,&quot;sequence&quot;:0},{&quot;txid&quot;:&quot;6d6766c283093e2d043ae877bb915175b3d8672a20f0459300267aaab1b5766a&quot;,&quot;vout&quot;:0,&quot;prevout&quot;:{&quot;scriptpubkey&quot;:&quot;001485b33c1937058ed08b5b122e30caf18e67ccb282&quot;,&quot;scriptpubkey_asm&quot;:&quot;OP_0 OP_PUSHBYTES_20 85b33c1937058ed08b5b122e30caf18e67ccb282&quot;,&quot;scriptpubkey_type&quot;:&quot;v0_p2wpkh&quot;,&quot;scriptpubkey_address&quot;:&quot;bc1qskencxfhqk8dpz6mzghrpjh33enuev5zh0mrjw&quot;,&quot;value&quot;:33247},&quot;scriptsig&quot;:&quot;&quot;,&quot;scriptsig_asm&quot;:&quot;&quot;,&quot;witness&quot;:[&quot;304402200272cac1a312aae2a4ee64150e5b26e611a56509a467176e38c905b632d3ce56022005497d0d3ff14911214cb0fbb22a1aa16830ba669f6ff38723684750ceb4b11a01&quot;,&quot;0397d3b72557bd2044508ee3b22d1216b3f871c0963500f8c8dc6a143ee7a6a206&quot;],&quot;is_coinbase&quot;:false,&quot;sequence&quot;:0},{&quot;txid&quot;:&quot;81af33ae00a9dadeb83b915b05742e986a470fff7456540e3f018deb94abda0e&quot;,&quot;vout&quot;:1,&quot;prevout&quot;:{&quot;scriptpubkey&quot;:&quot;001431505647092347abb0e4d2a34f6773b74a999d45&quot;,&quot;scriptpubkey_asm&quot;:&quot;OP_0 OP_PUSHBYTES_20 31505647092347abb0e4d2a34f6773b74a999d45&quot;,&quot;scriptpubkey_type&quot;:&quot;v0_p2wpkh&quot;,&quot;scriptpubkey_address&quot;:&quot;bc1qx9g9v3cfydr6hv8y62357emnka9fn8294e73yl&quot;,&quot;value&quot;:172952},&quot;scriptsig&quot;:&quot;&quot;,&quot;scriptsig_asm&quot;:&quot;&quot;,&quot;witness&quot;:[&quot;30450221008426c1b3d535f10c7cbccec6be3ea9be3514f3a86bf234584722665325283f35022010b6a617a465d1d7eea45562632f0ab80b0894da44b67fab65191a98fd9d3acb01&quot;,&quot;0221250914423379d3caf662297e8069621ca2c362cf92107388483929f4d9eb67&quot;],&quot;is_coinbase&quot;:false,&quot;sequence&quot;:0}],&quot;vout&quot;:[{&quot;scriptpubkey&quot;:&quot;001459c70c09f22b1bb007439af43b6809d6a2bc31b5&quot;,&quot;scriptpubkey_asm&quot;:&quot;OP_0 OP_PUSHBYTES_20 59c70c09f22b1bb007439af43b6809d6a2bc31b5&quot;,&quot;scriptpubkey_type&quot;:&quot;v0_p2wpkh&quot;,&quot;scriptpubkey_address&quot;:&quot;bc1qt8rscz0j9vdmqp6rnt6rk6qf663tcvd44f6gxa&quot;,&quot;value&quot;:2920},{&quot;scriptpubkey&quot;:&quot;00202c404e6e9c4d032267a29a6074c5db9333c6ccae0c9d430ced666316233d8c2f&quot;,&quot;scriptpubkey_asm&quot;:&quot;OP_0 OP_PUSHBYTES_32 2c404e6e9c4d032267a29a6074c5db9333c6ccae0c9d430ced666316233d8c2f&quot;,&quot;scriptpubkey_type&quot;:&quot;v0_p2wsh&quot;,&quot;scriptpubkey_address&quot;:&quot;bc1q93qyum5uf5pjyeaznfs8f3wmjveudn9wpjw5xr8dve33vgea3shs9jhvww&quot;,&quot;value&quot;:442557}],&quot;size&quot;:532,&quot;weight&quot;:1153,&quot;fee&quot;:23938,&quot;status&quot;:{&quot;confirmed&quot;:true,&quot;block_height&quot;:674358,&quot;block_hash&quot;:&quot;00000000000000000004c6171622f56692cc480d3c76ecae4355e69699a6ae44&quot;,&quot;block_time&quot;:1615595727}},{&quot;txid&quot;:&quot;07c9d3fbffc20f96ea7c93ef3bcdf346c8a8456c25850ea76be62b24a7cf690c&quot;,&quot;version&quot;:2,&quot;locktime&quot;:0,&quot;vin&quot;:[{&quot;txid&quot;:&quot;9332d8d11d81c3b674caff75db5543491e7f22e619ecc034bedf4a007518fe3a&quot;,&quot;vout&quot;:0,&quot;prevout&quot;:{&quot;scriptpubkey&quot;:&quot;001415f0dad74806b03612687038d4f5bab200afcf8e&quot;,&quot;scriptpubkey_asm&quot;:&quot;OP_0 OP_PUSHBYTES_20 15f0dad74806b03612687038d4f5bab200afcf8e&quot;,&quot;scriptpubkey_type&quot;:&quot;v0_p2wpkh&quot;,&quot;scriptpubkey_address&quot;:&quot;bc1qzhcd446gq6crvyngwqudfad6kgq2lnuw9r2a86&quot;,&quot;value&quot;:470675},&quot;scriptsig&quot;:&quot;&quot;,&quot;scriptsig_asm&quot;:&quot;&quot;,&quot;witness&quot;:[&quot;3045022100f30d84532f96b5e489047174e81394883cd519d427ca8f4facc2366f718cc678022007c083634402f40708c645cd0c1a2757b56de2076ca6ee856e514859381cd93801&quot;,&quot;02942b44eb4289e3af0aeeb73dfa82b0a5c8a3a06ae85bfd22aa3dcfcd64096462&quot;],&quot;is_coinbase&quot;:false,&quot;sequence&quot;:0},{&quot;txid&quot;:&quot;c62da0c2d1929ab2a2c04d4fbae2a6e4e947f867cba584d1f80c4a1a62f4a75f&quot;,&quot;vout&quot;:1,&quot;prevout&quot;:{&quot;scriptpubkey&quot;:&quot;0014f0c1d6b471d5e4a483fc146d4220a4e81587bf11&quot;,&quot;scriptpubkey_asm&quot;:&quot;OP_0 OP_PUSHBYTES_20 f0c1d6b471d5e4a483fc146d4220a4e81587bf11&quot;,&quot;scriptpubkey_type&quot;:&quot;v0_p2wpkh&quot;,&quot;scriptpubkey_address&quot;:&quot;bc1q7rqaddr36hj2fqluz3k5yg9yaq2c00c3tw4qy5&quot;,&quot;value&quot;:899778},&quot;scriptsig&quot;:&quot;&quot;,&quot;scriptsig_asm&quot;:&quot;&quot;,&quot;witness&quot;:[&quot;304402202da0eac25786003181526c4fe1592f982aa8d0f32c642a5103cdebbf4aa8b5a80220750cd6859bfb9a7df8d7c4d79a70e17a6df87f150fe1fdaade4650332ef0f47c01&quot;,&quot;02ecab80fcfe949633064c25fc33854fd09b8730decdf679db1f429bce201ec685&quot;],&quot;is_coinbase&quot;:false,&quot;sequence&quot;:0}],&quot;vout&quot;:[{&quot;scriptpubkey&quot;:&quot;001465c96c830168b8f0b584294d3b9716bb8584c2d8&quot;,&quot;scriptpubkey_asm&quot;:&quot;OP_0 OP_PUSHBYTES_20 65c96c830168b8f0b584294d3b9716bb8584c2d8&quot;,&quot;scriptpubkey_type&quot;:&quot;v0_p2wpkh&quot;,&quot;scriptpubkey_address&quot;:&quot;bc1qvhykeqcpdzu0pdvy99xnh9ckhwzcfskct6h6l2&quot;,&quot;value&quot;:263216},{&quot;scriptpubkey&quot;:&quot;00200cea60ae9eea43e64b17ba65a4c17bd3acf9dac307825deda85d5a093181dbc0&quot;,&quot;scriptpubkey_asm&quot;:&quot;OP_0 OP_PUSHBYTES_32 0cea60ae9eea43e64b17ba65a4c17bd3acf9dac307825deda85d5a093181dbc0&quot;,&quot;scriptpubkey_type&quot;:&quot;v0_p2wsh&quot;,&quot;scriptpubkey_address&quot;:&quot;bc1qpn4xpt57afp7vjchhfj6fstm6wk0nkkrq7p9mmdgt4dqjvvpm0qqlxqrns&quot;,&quot;value&quot;:1088924}],&quot;size&quot;:383,&quot;weight&quot;:881,&quot;fee&quot;:18313,&quot;status&quot;:{&quot;confirmed&quot;:true,&quot;block_height&quot;:674357,&quot;block_hash&quot;:&quot;00000000000000000008d0d007995a8bc9d60de17bd6b55e28a6e4c6918cb206&quot;,&quot;block_time&quot;:1615594996}}]&quot;#;
+    //     let expected_txs: Vec&lt;OnchainTx&gt; = serde_json::from_str(expected).unwrap();
+    //     let expected_serialized = serde_json::to_string(&amp;expected_txs).unwrap();
+
+    //     assert_eq!(expected_serialized, serialized_res);
+    // }
+</span>}
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="breez_sdk_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0 (69f9c33d7 2022-12-12)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="breez_sdk_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.67.1 (d5a82bbd2 2023-02-07)" data-search-js="search-444266647c4dba98.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-af96d9e2fc13e081.css" ></div></body></html>

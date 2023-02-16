@@ -1,3 +1,3 @@
 (function() {var implementors = {
-"breez_sdk_core":[["impl ToSql for <a class=\"enum\" href=\"breez_sdk_core/enum.PaymentDetails.html\" title=\"enum breez_sdk_core::PaymentDetails\">PaymentDetails</a>"]]
+"breez_sdk_core":[["impl ToSql for <a class=\"enum\" href=\"breez_sdk_core/enum.PaymentDetails.html\" title=\"enum breez_sdk_core::PaymentDetails\">PaymentDetails</a>"],["impl ToSql for <a class=\"enum\" href=\"breez_sdk_core/enum.SuccessActionProcessed.html\" title=\"enum breez_sdk_core::SuccessActionProcessed\">SuccessActionProcessed</a>"]]
 };if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
