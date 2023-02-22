@@ -967,6 +967,14 @@
 <a href="#967" id="967">967</a>
 <a href="#968" id="968">968</a>
 <a href="#969" id="969">969</a>
+<a href="#970" id="970">970</a>
+<a href="#971" id="971">971</a>
+<a href="#972" id="972">972</a>
+<a href="#973" id="973">973</a>
+<a href="#974" id="974">974</a>
+<a href="#975" id="975">975</a>
+<a href="#976" id="976">976</a>
+<a href="#977" id="977">977</a>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::input_parser::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::invoice::parse_invoice;
 <span class="kw">use </span><span class="kw">crate</span>::lnurl::maybe_replace_host_with_mockito_test_host;
@@ -1301,8 +1309,10 @@
 
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
-    <span class="kw">use </span><span class="kw">crate</span>::lnurl::pay::model::<span class="kw-2">*</span>;
+    <span class="kw">use </span>std::sync::Arc;
+
     <span class="kw">use </span><span class="kw">crate</span>::lnurl::pay::<span class="kw-2">*</span>;
+    <span class="kw">use crate</span>::{breez_services::tests::get_dummy_node_state, lnurl::pay::model::<span class="kw-2">*</span>};
 
     <span class="kw">use </span>aes::cipher::{block_padding::Pkcs7, BlockDecryptMut, BlockEncryptMut, KeyIvInit};
     <span class="kw">use </span>anyhow::{anyhow, <span class="prelude-ty">Result</span>};
@@ -1891,11 +1901,17 @@
             preimage.into_inner(),
         )<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>model_payment = MockNodeAPI::add_dummy_payment_for(bolt11, <span class="prelude-val">Some</span>(preimage)).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>mock_node_api = MockNodeAPI::new(get_dummy_node_state());
+        <span class="kw">let </span>model_payment = mock_node_api
+            .add_dummy_payment_for(bolt11, <span class="prelude-val">Some</span>(preimage))
+            .<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">let </span>known_payments: Vec&lt;<span class="kw">crate</span>::models::Payment&gt; = <span class="macro">vec!</span>[model_payment];
-        <span class="kw">let </span>mock_breez_services =
-            <span class="kw">crate</span>::breez_services::tests::breez_services_with(known_payments).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>mock_breez_services = <span class="kw">crate</span>::breez_services::tests::breez_services_with(
+            <span class="prelude-val">Some</span>(Arc::new(mock_node_api)),
+            known_payments,
+        )
+        .<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">match </span>mock_breez_services
             .lnurl_pay(user_amount_sat, <span class="prelude-val">None</span>, pay_req)
             .<span class="kw">await</span><span class="question-mark">?

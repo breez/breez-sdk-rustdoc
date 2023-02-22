@@ -1288,11 +1288,6 @@
 <a href="#1288" id="1288">1288</a>
 <a href="#1289" id="1289">1289</a>
 <a href="#1290" id="1290">1290</a>
-<a href="#1291" id="1291">1291</a>
-<a href="#1292" id="1292">1292</a>
-<a href="#1293" id="1293">1293</a>
-<a href="#1294" id="1294">1294</a>
-<a href="#1295" id="1295">1295</a>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::chain::{ChainService, MempoolSpace, RecommendedFees};
 <span class="kw">use </span><span class="kw">crate</span>::fiat::{FiatCurrency, Rate};
 <span class="kw">use </span><span class="kw">crate</span>::greenlight::Greenlight;
@@ -1816,12 +1811,6 @@
 
     <span class="kw">async fn </span>on_event(<span class="kw-2">&amp;</span><span class="self">self</span>, e: BreezEvent) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="macro">debug!</span>(<span class="string">&quot;breez services got event {:?}&quot;</span>, e);
-        <span class="kw">match </span>e {
-            BreezEvent::InvoicePaid { details: <span class="kw">_ </span>} =&gt; <span class="self">self</span>.sync().<span class="kw">await</span><span class="question-mark">?</span>,
-            BreezEvent::NewBlock { block: <span class="kw">_ </span>} =&gt; <span class="self">self</span>.sync().<span class="kw">await</span><span class="question-mark">?</span>,
-            <span class="kw">_ </span>=&gt; {}
-        };
-
         <span class="self">self</span>.notify_event_listeners(e.clone()).<span class="kw">await
     </span>}
 
@@ -1877,6 +1866,7 @@
            <span class="prelude-val">Ok</span>(next_block) =&gt; {
             <span class="macro">debug!</span>(<span class="string">&quot;got tip {:?}&quot;</span>, next_block);
             <span class="kw">if </span>next_block &gt; current_block {
+             <span class="kw">_ </span>= breez_services.sync().<span class="kw">await</span>;
              <span class="kw">_  </span>= breez_services.on_event(BreezEvent::NewBlock{block: next_block}).<span class="kw">await</span>;
             }
             current_block = next_block
@@ -1891,10 +1881,16 @@
            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(i)) =&gt; {
             <span class="macro">debug!</span>(<span class="string">&quot;invoice stream got new invoice&quot;</span>);
             <span class="kw">if let </span><span class="prelude-val">Some</span>(gl_client::pb::incoming_payment::Details::Offchain(p)) = i.details {
-                <span class="kw">_  </span>= breez_services.on_event(BreezEvent::InvoicePaid{details: InvoicePaidDetails {
-                    payment_hash: hex::encode(p.payment_hash),
-                    bolt11: p.bolt11,
-                }}).<span class="kw">await</span>;
+             <span class="kw">let </span>payment: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::models::Payment&gt; = p.clone().try_into().ok();
+             <span class="kw">if </span>payment.is_some() {
+              <span class="kw">let </span>res = breez_services.persister.insert_payments(<span class="kw-2">&amp;</span><span class="macro">vec!</span>[payment.unwrap()]);
+              <span class="macro">debug!</span>(<span class="string">&quot;paid invoice was added to payments list {:?}&quot;</span>, res);
+             }
+             <span class="kw">_  </span>= breez_services.on_event(BreezEvent::InvoicePaid{details: InvoicePaidDetails {
+                 payment_hash: hex::encode(p.payment_hash),
+                 bolt11: p.bolt11,
+             }}).<span class="kw">await</span>;
+             <span class="kw">_ </span>= breez_services.sync().<span class="kw">await</span>;
             }
            }
            <span class="comment">// stream is closed, renew it
@@ -1911,7 +1907,7 @@
          log_message_res = log_stream.message() =&gt; {
           <span class="kw">match </span>log_message_res {
            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(l)) =&gt; {
-            <span class="macro">debug!</span>(<span class="string">&quot;{}&quot;</span>, l.line);
+            <span class="macro">debug!</span>(<span class="string">&quot;node-logs: {}&quot;</span>, l.line);
            },
            <span class="comment">// stream is closed, renew it
            </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; {
@@ -2356,17 +2352,17 @@
     <span class="kw">use </span><span class="kw">crate</span>::lnurl::pay::model::MessageSuccessActionData;
     <span class="kw">use </span><span class="kw">crate</span>::lnurl::pay::model::SuccessActionProcessed;
     <span class="kw">use </span><span class="kw">crate</span>::models::{LnPaymentDetails, NodeState, Payment, PaymentDetails, PaymentTypeFilter};
-    <span class="kw">use </span><span class="kw">crate</span>::PaymentType;
     <span class="kw">use crate</span>::{parse_short_channel_id, test_utils::<span class="kw-2">*</span>};
+    <span class="kw">use crate</span>::{NodeAPI, PaymentType};
 
     <span class="kw">use super</span>::{PaymentReceiver, Receiver};
 
     <span class="attr">#[tokio::test]
     </span><span class="kw">async fn </span>test_node_state() -&gt; <span class="prelude-ty">Result</span>&lt;(), Box&lt;<span class="kw">dyn </span>std::error::Error&gt;&gt; {
-        <span class="kw">let </span>storage_path = <span class="macro">format!</span>(<span class="string">&quot;{}/storage.sql&quot;</span>, get_test_working_dir());
-        std::fs::remove_file(storage_path).ok();
+        <span class="comment">// let storage_path = format!(&quot;{}/storage.sql&quot;, get_test_working_dir());
+        // std::fs::remove_file(storage_path).ok();
 
-        <span class="kw">let </span>dummy_node_state = get_dummy_node_state();
+        </span><span class="kw">let </span>dummy_node_state = get_dummy_node_state();
 
         <span class="kw">let </span>sa = SuccessActionProcessed::Message {
             data: MessageSuccessActionData {
@@ -2417,10 +2413,7 @@
                 },
             },
         ];
-        <span class="kw">let </span>node_api = Arc::new(MockNodeAPI {
-            node_state: dummy_node_state.clone(),
-            transactions: dummy_transactions.clone(),
-        });
+        <span class="kw">let </span>node_api = Arc::new(MockNodeAPI::new(dummy_node_state.clone()));
 
         <span class="kw">let </span>test_config = create_test_config();
         <span class="kw">let </span>persister = Arc::new(create_test_persister(test_config.clone()));
@@ -2475,10 +2468,8 @@
         persister.init().unwrap();
 
         <span class="kw">let </span>dummy_node_state = get_dummy_node_state();
-        <span class="kw">let </span>node_api = Arc::new(MockNodeAPI {
-            node_state: dummy_node_state.clone(),
-            transactions: <span class="macro">vec!</span>[],
-        });
+
+        <span class="kw">let </span>node_api = Arc::new(MockNodeAPI::new(dummy_node_state.clone()));
 
         <span class="kw">let </span>breez_server = Arc::new(MockBreezServer {});
         persister.set_lsp_id(breez_server.lsp_id()).unwrap();
@@ -2541,17 +2532,16 @@
 
     <span class="doccomment">/// Build node service for tests
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async fn </span>breez_services() -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;BreezServices&gt;&gt; {
-        breez_services_with(<span class="macro">vec!</span>[]).<span class="kw">await
+        breez_services_with(<span class="prelude-val">None</span>, <span class="macro">vec!</span>[]).<span class="kw">await
     </span>}
 
     <span class="doccomment">/// Build node service for tests with a list of known payments
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async fn </span>breez_services_with(
+        node_api: <span class="prelude-ty">Option</span>&lt;Arc&lt;<span class="kw">dyn </span>NodeAPI&gt;&gt;,
         known_payments: Vec&lt;Payment&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;BreezServices&gt;&gt; {
-        <span class="kw">let </span>node_api = Arc::new(MockNodeAPI {
-            node_state: get_dummy_node_state(),
-            transactions: known_payments.clone(),
-        });
+        <span class="kw">let </span>node_api =
+            node_api.unwrap_or_else(|| Arc::new(MockNodeAPI::new(get_dummy_node_state())));
 
         <span class="kw">let </span>test_config = create_test_config();
         <span class="kw">let </span>persister = Arc::new(create_test_persister(test_config.clone()));
